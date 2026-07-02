@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as EliteIndexRouteImport } from './routes/elite.index'
+import { Route as EliteSlugRouteImport } from './routes/elite.$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -22,30 +23,39 @@ const EliteIndexRoute = EliteIndexRouteImport.update({
   path: '/elite/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EliteSlugRoute = EliteSlugRouteImport.update({
+  id: '/elite/$slug',
+  path: '/elite/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/elite/$slug': typeof EliteSlugRoute
   '/elite/': typeof EliteIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/elite/$slug': typeof EliteSlugRoute
   '/elite': typeof EliteIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/elite/$slug': typeof EliteSlugRoute
   '/elite/': typeof EliteIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/elite/'
+  fullPaths: '/' | '/elite/$slug' | '/elite/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/elite'
-  id: '__root__' | '/' | '/elite/'
+  to: '/' | '/elite/$slug' | '/elite'
+  id: '__root__' | '/' | '/elite/$slug' | '/elite/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  EliteSlugRoute: typeof EliteSlugRoute
   EliteIndexRoute: typeof EliteIndexRoute
 }
 
@@ -65,11 +75,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EliteIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/elite/$slug': {
+      id: '/elite/$slug'
+      path: '/elite/$slug'
+      fullPath: '/elite/$slug'
+      preLoaderRoute: typeof EliteSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  EliteSlugRoute: EliteSlugRoute,
   EliteIndexRoute: EliteIndexRoute,
 }
 export const routeTree = rootRouteImport
