@@ -9,10 +9,16 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as LeaderboardsRouteImport } from './routes/leaderboards'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as EliteIndexRouteImport } from './routes/elite.index'
 import { Route as EliteSlugRouteImport } from './routes/elite.$slug'
 
+const LeaderboardsRoute = LeaderboardsRouteImport.update({
+  id: '/leaderboards',
+  path: '/leaderboards',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -31,36 +37,47 @@ const EliteSlugRoute = EliteSlugRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/leaderboards': typeof LeaderboardsRoute
   '/elite/$slug': typeof EliteSlugRoute
   '/elite/': typeof EliteIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/leaderboards': typeof LeaderboardsRoute
   '/elite/$slug': typeof EliteSlugRoute
   '/elite': typeof EliteIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/leaderboards': typeof LeaderboardsRoute
   '/elite/$slug': typeof EliteSlugRoute
   '/elite/': typeof EliteIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/elite/$slug' | '/elite/'
+  fullPaths: '/' | '/leaderboards' | '/elite/$slug' | '/elite/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/elite/$slug' | '/elite'
-  id: '__root__' | '/' | '/elite/$slug' | '/elite/'
+  to: '/' | '/leaderboards' | '/elite/$slug' | '/elite'
+  id: '__root__' | '/' | '/leaderboards' | '/elite/$slug' | '/elite/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  LeaderboardsRoute: typeof LeaderboardsRoute
   EliteSlugRoute: typeof EliteSlugRoute
   EliteIndexRoute: typeof EliteIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/leaderboards': {
+      id: '/leaderboards'
+      path: '/leaderboards'
+      fullPath: '/leaderboards'
+      preLoaderRoute: typeof LeaderboardsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -87,6 +104,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  LeaderboardsRoute: LeaderboardsRoute,
   EliteSlugRoute: EliteSlugRoute,
   EliteIndexRoute: EliteIndexRoute,
 }
