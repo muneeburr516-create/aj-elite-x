@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LeaderboardsRouteImport } from './routes/leaderboards'
+import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as EliteIndexRouteImport } from './routes/elite.index'
@@ -18,6 +19,11 @@ import { Route as EliteSlugRouteImport } from './routes/elite.$slug'
 const LeaderboardsRoute = LeaderboardsRouteImport.update({
   id: '/leaderboards',
   path: '/leaderboards',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -44,6 +50,7 @@ const EliteSlugRoute = EliteSlugRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/contact': typeof ContactRoute
   '/leaderboards': typeof LeaderboardsRoute
   '/elite/$slug': typeof EliteSlugRoute
   '/elite/': typeof EliteIndexRoute
@@ -51,6 +58,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/contact': typeof ContactRoute
   '/leaderboards': typeof LeaderboardsRoute
   '/elite/$slug': typeof EliteSlugRoute
   '/elite': typeof EliteIndexRoute
@@ -59,21 +67,36 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/contact': typeof ContactRoute
   '/leaderboards': typeof LeaderboardsRoute
   '/elite/$slug': typeof EliteSlugRoute
   '/elite/': typeof EliteIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/leaderboards' | '/elite/$slug' | '/elite/'
+  fullPaths:
+    | '/'
+    | '/about'
+    | '/contact'
+    | '/leaderboards'
+    | '/elite/$slug'
+    | '/elite/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/leaderboards' | '/elite/$slug' | '/elite'
-  id: '__root__' | '/' | '/about' | '/leaderboards' | '/elite/$slug' | '/elite/'
+  to: '/' | '/about' | '/contact' | '/leaderboards' | '/elite/$slug' | '/elite'
+  id:
+    | '__root__'
+    | '/'
+    | '/about'
+    | '/contact'
+    | '/leaderboards'
+    | '/elite/$slug'
+    | '/elite/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
+  ContactRoute: typeof ContactRoute
   LeaderboardsRoute: typeof LeaderboardsRoute
   EliteSlugRoute: typeof EliteSlugRoute
   EliteIndexRoute: typeof EliteIndexRoute
@@ -86,6 +109,13 @@ declare module '@tanstack/react-router' {
       path: '/leaderboards'
       fullPath: '/leaderboards'
       preLoaderRoute: typeof LeaderboardsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about': {
@@ -122,6 +152,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
+  ContactRoute: ContactRoute,
   LeaderboardsRoute: LeaderboardsRoute,
   EliteSlugRoute: EliteSlugRoute,
   EliteIndexRoute: EliteIndexRoute,
