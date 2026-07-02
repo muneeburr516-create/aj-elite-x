@@ -84,19 +84,15 @@ function NavItem({ to, label, mobile = false }: { to: string; label: string; mob
     <Link
       to={to}
       className={cn(
-        "relative px-4 py-2 text-sm font-medium tracking-wide text-white/70 transition-colors hover:text-white",
+        "group relative px-4 py-2 text-sm font-medium tracking-wide text-white/70 transition-colors hover:text-white",
         mobile && "rounded-lg hover:bg-white/5",
       )}
-      activeProps={{ className: "!text-white" }}
+      activeProps={{ className: "!text-white [&_.nav-underline]:opacity-100" }}
       activeOptions={{ exact: to === "/" }}
     >
-      {({ isActive }) => (
-        <>
-          <span>{label}</span>
-          {isActive && !mobile && (
-            <span className="absolute inset-x-3 -bottom-0.5 h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent" />
-          )}
-        </>
+      <span>{label}</span>
+      {!mobile && (
+        <span className="nav-underline pointer-events-none absolute inset-x-3 -bottom-0.5 h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent opacity-0 transition-opacity" />
       )}
     </Link>
   );
