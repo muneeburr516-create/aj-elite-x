@@ -15,7 +15,18 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as EliteIndexRouteImport } from './routes/elite.index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as EliteSlugRouteImport } from './routes/elite.$slug'
+import { Route as AdminWorkoutsRouteImport } from './routes/admin.workouts'
+import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
+import { Route as AdminReportsRouteImport } from './routes/admin.reports'
+import { Route as AdminMediaRouteImport } from './routes/admin.media'
+import { Route as AdminMeasurementsRouteImport } from './routes/admin.measurements'
+import { Route as AdminLeaderboardsRouteImport } from './routes/admin.leaderboards'
+import { Route as AdminGalleryRouteImport } from './routes/admin.gallery'
+import { Route as AdminAthletesRouteImport } from './routes/admin.athletes'
+import { Route as AdminActivityRouteImport } from './routes/admin.activity'
+import { Route as AdminAthletesSlugRouteImport } from './routes/admin.athletes.$slug'
 
 const LeaderboardsRoute = LeaderboardsRouteImport.update({
   id: '/leaderboards',
@@ -47,39 +58,126 @@ const EliteIndexRoute = EliteIndexRouteImport.update({
   path: '/elite/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
 const EliteSlugRoute = EliteSlugRouteImport.update({
   id: '/elite/$slug',
   path: '/elite/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminWorkoutsRoute = AdminWorkoutsRouteImport.update({
+  id: '/workouts',
+  path: '/workouts',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSettingsRoute = AdminSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminReportsRoute = AdminReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMediaRoute = AdminMediaRouteImport.update({
+  id: '/media',
+  path: '/media',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMeasurementsRoute = AdminMeasurementsRouteImport.update({
+  id: '/measurements',
+  path: '/measurements',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminLeaderboardsRoute = AdminLeaderboardsRouteImport.update({
+  id: '/leaderboards',
+  path: '/leaderboards',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminGalleryRoute = AdminGalleryRouteImport.update({
+  id: '/gallery',
+  path: '/gallery',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAthletesRoute = AdminAthletesRouteImport.update({
+  id: '/athletes',
+  path: '/athletes',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminActivityRoute = AdminActivityRouteImport.update({
+  id: '/activity',
+  path: '/activity',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAthletesSlugRoute = AdminAthletesSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => AdminAthletesRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/contact': typeof ContactRoute
   '/leaderboards': typeof LeaderboardsRoute
+  '/admin/activity': typeof AdminActivityRoute
+  '/admin/athletes': typeof AdminAthletesRouteWithChildren
+  '/admin/gallery': typeof AdminGalleryRoute
+  '/admin/leaderboards': typeof AdminLeaderboardsRoute
+  '/admin/measurements': typeof AdminMeasurementsRoute
+  '/admin/media': typeof AdminMediaRoute
+  '/admin/reports': typeof AdminReportsRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/admin/workouts': typeof AdminWorkoutsRoute
   '/elite/$slug': typeof EliteSlugRoute
+  '/admin/': typeof AdminIndexRoute
   '/elite/': typeof EliteIndexRoute
+  '/admin/athletes/$slug': typeof AdminAthletesSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/admin': typeof AdminRoute
   '/contact': typeof ContactRoute
   '/leaderboards': typeof LeaderboardsRoute
+  '/admin/activity': typeof AdminActivityRoute
+  '/admin/athletes': typeof AdminAthletesRouteWithChildren
+  '/admin/gallery': typeof AdminGalleryRoute
+  '/admin/leaderboards': typeof AdminLeaderboardsRoute
+  '/admin/measurements': typeof AdminMeasurementsRoute
+  '/admin/media': typeof AdminMediaRoute
+  '/admin/reports': typeof AdminReportsRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/admin/workouts': typeof AdminWorkoutsRoute
   '/elite/$slug': typeof EliteSlugRoute
+  '/admin': typeof AdminIndexRoute
   '/elite': typeof EliteIndexRoute
+  '/admin/athletes/$slug': typeof AdminAthletesSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/contact': typeof ContactRoute
   '/leaderboards': typeof LeaderboardsRoute
+  '/admin/activity': typeof AdminActivityRoute
+  '/admin/athletes': typeof AdminAthletesRouteWithChildren
+  '/admin/gallery': typeof AdminGalleryRoute
+  '/admin/leaderboards': typeof AdminLeaderboardsRoute
+  '/admin/measurements': typeof AdminMeasurementsRoute
+  '/admin/media': typeof AdminMediaRoute
+  '/admin/reports': typeof AdminReportsRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/admin/workouts': typeof AdminWorkoutsRoute
   '/elite/$slug': typeof EliteSlugRoute
+  '/admin/': typeof AdminIndexRoute
   '/elite/': typeof EliteIndexRoute
+  '/admin/athletes/$slug': typeof AdminAthletesSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -89,17 +187,38 @@ export interface FileRouteTypes {
     | '/admin'
     | '/contact'
     | '/leaderboards'
+    | '/admin/activity'
+    | '/admin/athletes'
+    | '/admin/gallery'
+    | '/admin/leaderboards'
+    | '/admin/measurements'
+    | '/admin/media'
+    | '/admin/reports'
+    | '/admin/settings'
+    | '/admin/workouts'
     | '/elite/$slug'
+    | '/admin/'
     | '/elite/'
+    | '/admin/athletes/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/about'
-    | '/admin'
     | '/contact'
     | '/leaderboards'
+    | '/admin/activity'
+    | '/admin/athletes'
+    | '/admin/gallery'
+    | '/admin/leaderboards'
+    | '/admin/measurements'
+    | '/admin/media'
+    | '/admin/reports'
+    | '/admin/settings'
+    | '/admin/workouts'
     | '/elite/$slug'
+    | '/admin'
     | '/elite'
+    | '/admin/athletes/$slug'
   id:
     | '__root__'
     | '/'
@@ -107,14 +226,25 @@ export interface FileRouteTypes {
     | '/admin'
     | '/contact'
     | '/leaderboards'
+    | '/admin/activity'
+    | '/admin/athletes'
+    | '/admin/gallery'
+    | '/admin/leaderboards'
+    | '/admin/measurements'
+    | '/admin/media'
+    | '/admin/reports'
+    | '/admin/settings'
+    | '/admin/workouts'
     | '/elite/$slug'
+    | '/admin/'
     | '/elite/'
+    | '/admin/athletes/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
-  AdminRoute: typeof AdminRoute
+  AdminRoute: typeof AdminRouteWithChildren
   ContactRoute: typeof ContactRoute
   LeaderboardsRoute: typeof LeaderboardsRoute
   EliteSlugRoute: typeof EliteSlugRoute
@@ -165,6 +295,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EliteIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/elite/$slug': {
       id: '/elite/$slug'
       path: '/elite/$slug'
@@ -172,13 +309,123 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EliteSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/workouts': {
+      id: '/admin/workouts'
+      path: '/workouts'
+      fullPath: '/admin/workouts'
+      preLoaderRoute: typeof AdminWorkoutsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/settings': {
+      id: '/admin/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/reports': {
+      id: '/admin/reports'
+      path: '/reports'
+      fullPath: '/admin/reports'
+      preLoaderRoute: typeof AdminReportsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/media': {
+      id: '/admin/media'
+      path: '/media'
+      fullPath: '/admin/media'
+      preLoaderRoute: typeof AdminMediaRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/measurements': {
+      id: '/admin/measurements'
+      path: '/measurements'
+      fullPath: '/admin/measurements'
+      preLoaderRoute: typeof AdminMeasurementsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/leaderboards': {
+      id: '/admin/leaderboards'
+      path: '/leaderboards'
+      fullPath: '/admin/leaderboards'
+      preLoaderRoute: typeof AdminLeaderboardsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/gallery': {
+      id: '/admin/gallery'
+      path: '/gallery'
+      fullPath: '/admin/gallery'
+      preLoaderRoute: typeof AdminGalleryRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/athletes': {
+      id: '/admin/athletes'
+      path: '/athletes'
+      fullPath: '/admin/athletes'
+      preLoaderRoute: typeof AdminAthletesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/activity': {
+      id: '/admin/activity'
+      path: '/activity'
+      fullPath: '/admin/activity'
+      preLoaderRoute: typeof AdminActivityRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/athletes/$slug': {
+      id: '/admin/athletes/$slug'
+      path: '/$slug'
+      fullPath: '/admin/athletes/$slug'
+      preLoaderRoute: typeof AdminAthletesSlugRouteImport
+      parentRoute: typeof AdminAthletesRoute
+    }
   }
 }
+
+interface AdminAthletesRouteChildren {
+  AdminAthletesSlugRoute: typeof AdminAthletesSlugRoute
+}
+
+const AdminAthletesRouteChildren: AdminAthletesRouteChildren = {
+  AdminAthletesSlugRoute: AdminAthletesSlugRoute,
+}
+
+const AdminAthletesRouteWithChildren = AdminAthletesRoute._addFileChildren(
+  AdminAthletesRouteChildren,
+)
+
+interface AdminRouteChildren {
+  AdminActivityRoute: typeof AdminActivityRoute
+  AdminAthletesRoute: typeof AdminAthletesRouteWithChildren
+  AdminGalleryRoute: typeof AdminGalleryRoute
+  AdminLeaderboardsRoute: typeof AdminLeaderboardsRoute
+  AdminMeasurementsRoute: typeof AdminMeasurementsRoute
+  AdminMediaRoute: typeof AdminMediaRoute
+  AdminReportsRoute: typeof AdminReportsRoute
+  AdminSettingsRoute: typeof AdminSettingsRoute
+  AdminWorkoutsRoute: typeof AdminWorkoutsRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminActivityRoute: AdminActivityRoute,
+  AdminAthletesRoute: AdminAthletesRouteWithChildren,
+  AdminGalleryRoute: AdminGalleryRoute,
+  AdminLeaderboardsRoute: AdminLeaderboardsRoute,
+  AdminMeasurementsRoute: AdminMeasurementsRoute,
+  AdminMediaRoute: AdminMediaRoute,
+  AdminReportsRoute: AdminReportsRoute,
+  AdminSettingsRoute: AdminSettingsRoute,
+  AdminWorkoutsRoute: AdminWorkoutsRoute,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
-  AdminRoute: AdminRoute,
+  AdminRoute: AdminRouteWithChildren,
   ContactRoute: ContactRoute,
   LeaderboardsRoute: LeaderboardsRoute,
   EliteSlugRoute: EliteSlugRoute,
