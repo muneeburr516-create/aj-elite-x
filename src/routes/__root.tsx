@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -15,6 +16,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { AnimatedBackground } from "@/components/layout/AnimatedBackground";
 import { ScrollProgress, ScrollToTop } from "@/components/layout/ScrollUtils";
+import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
   return (
@@ -115,6 +117,17 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isAdmin = pathname.startsWith("/admin");
+
+  if (isAdmin) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <Outlet />
+        <Toaster theme="dark" position="top-right" />
+      </QueryClientProvider>
+    );
+  }
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -126,6 +139,7 @@ function RootComponent() {
       </main>
       <Footer />
       <ScrollToTop />
+      <Toaster theme="dark" position="top-right" />
     </QueryClientProvider>
   );
 }
