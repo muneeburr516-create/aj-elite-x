@@ -114,21 +114,29 @@ function DashboardPage() {
         <GlassCard>
           <div className="text-[10px] tracking-[0.3em] text-primary">RECENT ACTIVITY</div>
           <h3 className="font-display text-lg mt-1 mb-4">Latest updates</h3>
-          <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
-            {activityFeed.slice(0, 8).map((a) => (
-              <div key={a.id} className="flex items-start gap-3 pb-3 border-b border-white/5 last:border-0">
-                <div className="h-8 w-8 rounded-lg bg-primary/15 border border-primary/30 flex items-center justify-center text-[10px] font-bold text-primary shrink-0">
-                  {a.type === "workout" ? "WO" : a.type === "measurement" ? "MS" : a.type === "photo" ? "PH" : a.type === "leaderboard" ? "LB" : "AT"}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-sm truncate">{a.message}</div>
-                  <div className="text-[10px] text-white/40 mt-0.5">{a.actor} · {a.time}</div>
-                </div>
-              </div>
-            ))}
-          </div>
+          <ActivityList />
         </GlassCard>
       </div>
     </AdminShell>
+  );
+}
+
+function ActivityList() {
+  const { data: feed = [] } = useActivityLogs();
+  if (feed.length === 0) return <div className="text-xs text-white/40 py-4">No activity yet.</div>;
+  return (
+    <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
+      {feed.slice(0, 8).map((a) => (
+        <div key={a.id} className="flex items-start gap-3 pb-3 border-b border-white/5 last:border-0">
+          <div className="h-8 w-8 rounded-lg bg-primary/15 border border-primary/30 flex items-center justify-center text-[10px] font-bold text-primary shrink-0">
+            {a.action.slice(0, 2).toUpperCase()}
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-sm truncate">{a.description ?? a.action}</div>
+            <div className="text-[10px] text-white/40 mt-0.5">{a.admin_email ?? "system"} · {new Date(a.created_at).toLocaleString()}</div>
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
