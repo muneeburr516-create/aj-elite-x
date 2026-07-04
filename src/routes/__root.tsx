@@ -17,6 +17,7 @@ import { Footer } from "@/components/layout/Footer";
 import { AnimatedBackground } from "@/components/layout/AnimatedBackground";
 import { ScrollProgress, ScrollToTop } from "@/components/layout/ScrollUtils";
 import { Toaster } from "@/components/ui/sonner";
+import { AuthProvider } from "@/lib/auth-context";
 
 function NotFoundComponent() {
   return (
@@ -123,23 +124,27 @@ function RootComponent() {
   if (isAdmin) {
     return (
       <QueryClientProvider client={queryClient}>
-        <Outlet />
-        <Toaster theme="dark" position="top-right" />
+        <AuthProvider>
+          <Outlet />
+          <Toaster theme="dark" position="top-right" />
+        </AuthProvider>
       </QueryClientProvider>
     );
   }
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AnimatedBackground />
-      <ScrollProgress />
-      <Navbar />
-      <main className="pt-24">
-        <Outlet />
-      </main>
-      <Footer />
-      <ScrollToTop />
-      <Toaster theme="dark" position="top-right" />
+      <AuthProvider>
+        <AnimatedBackground />
+        <ScrollProgress />
+        <Navbar />
+        <main className="pt-24">
+          <Outlet />
+        </main>
+        <Footer />
+        <ScrollToTop />
+        <Toaster theme="dark" position="top-right" />
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

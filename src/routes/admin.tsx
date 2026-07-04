@@ -1,4 +1,6 @@
-import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useLocation, Navigate } from "@tanstack/react-router";
+import { useAuth } from "@/lib/auth-context";
+import { Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -8,5 +10,23 @@ export const Route = createFileRoute("/admin")({
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),
-  component: () => <Outlet />,
+  component: AdminGate,
 });
+
+function AdminGate() {
+  const { user, isAdmin, loading } = useAuth();
+  const loc = useLocation();
+
+  // Login page is public
+  if (loc.pathname === "/admin/login") return <Outlet />;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen grid place-items-center bg-neutral-950">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
+  }
+  if (!user || !isAdmin) return <Navigate to="/admin/login" />;
+  return <Outlet />;
+}

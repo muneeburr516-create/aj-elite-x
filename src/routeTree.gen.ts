@@ -22,6 +22,7 @@ import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminReportsRouteImport } from './routes/admin.reports'
 import { Route as AdminMediaRouteImport } from './routes/admin.media'
 import { Route as AdminMeasurementsRouteImport } from './routes/admin.measurements'
+import { Route as AdminLoginRouteImport } from './routes/admin.login'
 import { Route as AdminLeaderboardsRouteImport } from './routes/admin.leaderboards'
 import { Route as AdminGalleryRouteImport } from './routes/admin.gallery'
 import { Route as AdminAthletesRouteImport } from './routes/admin.athletes'
@@ -93,6 +94,11 @@ const AdminMeasurementsRoute = AdminMeasurementsRouteImport.update({
   path: '/measurements',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminLoginRoute = AdminLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminLeaderboardsRoute = AdminLeaderboardsRouteImport.update({
   id: '/leaderboards',
   path: '/leaderboards',
@@ -129,6 +135,7 @@ export interface FileRoutesByFullPath {
   '/admin/athletes': typeof AdminAthletesRouteWithChildren
   '/admin/gallery': typeof AdminGalleryRoute
   '/admin/leaderboards': typeof AdminLeaderboardsRoute
+  '/admin/login': typeof AdminLoginRoute
   '/admin/measurements': typeof AdminMeasurementsRoute
   '/admin/media': typeof AdminMediaRoute
   '/admin/reports': typeof AdminReportsRoute
@@ -148,6 +155,7 @@ export interface FileRoutesByTo {
   '/admin/athletes': typeof AdminAthletesRouteWithChildren
   '/admin/gallery': typeof AdminGalleryRoute
   '/admin/leaderboards': typeof AdminLeaderboardsRoute
+  '/admin/login': typeof AdminLoginRoute
   '/admin/measurements': typeof AdminMeasurementsRoute
   '/admin/media': typeof AdminMediaRoute
   '/admin/reports': typeof AdminReportsRoute
@@ -169,6 +177,7 @@ export interface FileRoutesById {
   '/admin/athletes': typeof AdminAthletesRouteWithChildren
   '/admin/gallery': typeof AdminGalleryRoute
   '/admin/leaderboards': typeof AdminLeaderboardsRoute
+  '/admin/login': typeof AdminLoginRoute
   '/admin/measurements': typeof AdminMeasurementsRoute
   '/admin/media': typeof AdminMediaRoute
   '/admin/reports': typeof AdminReportsRoute
@@ -191,6 +200,7 @@ export interface FileRouteTypes {
     | '/admin/athletes'
     | '/admin/gallery'
     | '/admin/leaderboards'
+    | '/admin/login'
     | '/admin/measurements'
     | '/admin/media'
     | '/admin/reports'
@@ -210,6 +220,7 @@ export interface FileRouteTypes {
     | '/admin/athletes'
     | '/admin/gallery'
     | '/admin/leaderboards'
+    | '/admin/login'
     | '/admin/measurements'
     | '/admin/media'
     | '/admin/reports'
@@ -230,6 +241,7 @@ export interface FileRouteTypes {
     | '/admin/athletes'
     | '/admin/gallery'
     | '/admin/leaderboards'
+    | '/admin/login'
     | '/admin/measurements'
     | '/admin/media'
     | '/admin/reports'
@@ -344,6 +356,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminMeasurementsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/login': {
+      id: '/admin/login'
+      path: '/login'
+      fullPath: '/admin/login'
+      preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/leaderboards': {
       id: '/admin/leaderboards'
       path: '/leaderboards'
@@ -399,6 +418,7 @@ interface AdminRouteChildren {
   AdminAthletesRoute: typeof AdminAthletesRouteWithChildren
   AdminGalleryRoute: typeof AdminGalleryRoute
   AdminLeaderboardsRoute: typeof AdminLeaderboardsRoute
+  AdminLoginRoute: typeof AdminLoginRoute
   AdminMeasurementsRoute: typeof AdminMeasurementsRoute
   AdminMediaRoute: typeof AdminMediaRoute
   AdminReportsRoute: typeof AdminReportsRoute
@@ -412,6 +432,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAthletesRoute: AdminAthletesRouteWithChildren,
   AdminGalleryRoute: AdminGalleryRoute,
   AdminLeaderboardsRoute: AdminLeaderboardsRoute,
+  AdminLoginRoute: AdminLoginRoute,
   AdminMeasurementsRoute: AdminMeasurementsRoute,
   AdminMediaRoute: AdminMediaRoute,
   AdminReportsRoute: AdminReportsRoute,
