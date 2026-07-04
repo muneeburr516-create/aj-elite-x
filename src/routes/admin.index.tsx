@@ -6,7 +6,8 @@ import {
   Users, CalendarClock, ClipboardList, UserCheck, Crown, TrendingUp, Timer, Activity as ActivityIcon,
   Dumbbell, ArrowUp, ArrowDown,
 } from "lucide-react";
-import { dashboardStats, workoutTrend, attendanceTrend, weeklySummary, activityFeed } from "@/data/adminMock";
+import { workoutTrend, attendanceTrend, weeklySummary } from "@/data/adminMock";
+import { useDashboardSummary, useActivityLogs, useSettings } from "@/hooks/useElite";
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
   BarChart, Bar, LineChart, Line, Legend,
@@ -27,21 +28,25 @@ const chartTooltip = {
 };
 
 function DashboardPage() {
-  const s = dashboardStats();
+  const { data: s } = useDashboardSummary();
+  const { data: settings } = useSettings();
+  const currentDay = settings?.current_day ?? 1;
+  const duration = settings?.challenge_duration ?? 90;
+  const daysRemaining = Math.max(0, duration - currentDay);
+  const leaderFirst = (s?.current_leader ?? "—").split(" ")[0];
   return (
     <AdminShell title="Dashboard" subtitle="Real-time view of the Elite X quest">
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
-        <StatCard index={0} label="Total Athletes" value={s.totalAthletes} icon={Users} hint="Hand-picked roster" accent />
-        <StatCard index={1} label="Challenge Day" value={`${s.challengeDay}/90`} icon={CalendarClock} hint={`${s.daysRemaining} days remaining`} />
-        <StatCard index={2} label="Workouts Pending" value={s.workoutsPending} icon={ClipboardList} hint="For today's session" />
-        <StatCard index={3} label="Attendance Today" value={`${s.attendanceToday}/10`} icon={UserCheck} hint="Present athletes" />
-        <StatCard index={4} label="Current Leader" value={<span className="text-xl">{s.currentLeader.split(" ")[0]}</span>} icon={Crown} hint="By power score" />
-        <StatCard index={5} label="Highest Push-ups" value={s.highestPushups} icon={Dumbbell} hint="Today's session" />
-        <StatCard index={6} label="Highest Pull-ups" value={s.highestPullups} icon={TrendingUp} hint="Today's session" />
-        <StatCard index={7} label="Highest Chin-ups" value={s.highestChinups} icon={TrendingUp} hint="Today's session" />
-        <StatCard index={8} label="Avg Attendance" value={`${s.averageAttendance}%`} icon={ActivityIcon} hint="Across quest" />
-        <StatCard index={9} label="Countdown" value={`${s.daysRemaining}d`} icon={Timer} hint="Until champion crowned" accent />
+        <StatCard index={0} label="Total Athletes" value={s?.total_athletes ?? 0} icon={Users} hint="Active roster" accent />
+        <StatCard index={1} label="Challenge Day" value={`${currentDay}/${duration}`} icon={CalendarClock} hint={`${daysRemaining} days remaining`} />
+        <StatCard index={2} label="Current Leader" value={<span className="text-xl">{leaderFirst}</span>} icon={Crown} hint="By power score" />
+        <StatCard index={3} label="Highest Push-ups" value={s?.highest_pushups ?? 0} icon={Dumbbell} hint="Best session" />
+        <StatCard index={4} label="Highest Pull-ups" value={s?.highest_pullups ?? 0} icon={TrendingUp} hint="Best session" />
+        <StatCard index={5} label="Highest Chin-ups" value={s?.highest_chinups ?? 0} icon={TrendingUp} hint="Best session" />
+        <StatCard index={6} label="Avg Attendance" value={`${s?.average_attendance ?? 0}%`} icon={ActivityIcon} hint="Across quest" />
+        <StatCard index={7} label="Countdown" value={`${daysRemaining}d`} icon={Timer} hint="Until champion crowned" accent />
       </div>
+
 
       <div className="grid lg:grid-cols-3 gap-4 mt-6">
         <GlassCard className="lg:col-span-2">
