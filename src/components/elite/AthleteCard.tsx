@@ -2,7 +2,8 @@ import { Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { Flame, TrendingUp, Trophy, ArrowUpRight } from "lucide-react";
 import { GlassCard } from "@/components/common/GlassCard";
-import type { Athlete } from "@/data/elite";
+import type { DisplayAthlete as Athlete } from "@/lib/athlete-adapter";
+export type { DisplayAthlete } from "@/lib/athlete-adapter";
 import { cn } from "@/lib/utils";
 
 export function AthleteAvatar({ athlete, size = "md" }: { athlete: Athlete; size?: "sm" | "md" | "lg" | "xl" }) {
