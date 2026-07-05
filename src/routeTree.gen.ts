@@ -26,6 +26,7 @@ import { Route as AdminLoginRouteImport } from './routes/admin.login'
 import { Route as AdminLeaderboardsRouteImport } from './routes/admin.leaderboards'
 import { Route as AdminGalleryRouteImport } from './routes/admin.gallery'
 import { Route as AdminAthletesRouteImport } from './routes/admin.athletes'
+import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as AdminActivityRouteImport } from './routes/admin.activity'
 import { Route as AdminAthletesSlugRouteImport } from './routes/admin.athletes.$slug'
 
@@ -114,6 +115,11 @@ const AdminAthletesRoute = AdminAthletesRouteImport.update({
   path: '/athletes',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminActivityRoute = AdminActivityRouteImport.update({
   id: '/activity',
   path: '/activity',
@@ -132,6 +138,7 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/leaderboards': typeof LeaderboardsRoute
   '/admin/activity': typeof AdminActivityRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/athletes': typeof AdminAthletesRouteWithChildren
   '/admin/gallery': typeof AdminGalleryRoute
   '/admin/leaderboards': typeof AdminLeaderboardsRoute
@@ -152,6 +159,7 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/leaderboards': typeof LeaderboardsRoute
   '/admin/activity': typeof AdminActivityRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/athletes': typeof AdminAthletesRouteWithChildren
   '/admin/gallery': typeof AdminGalleryRoute
   '/admin/leaderboards': typeof AdminLeaderboardsRoute
@@ -174,6 +182,7 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/leaderboards': typeof LeaderboardsRoute
   '/admin/activity': typeof AdminActivityRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/athletes': typeof AdminAthletesRouteWithChildren
   '/admin/gallery': typeof AdminGalleryRoute
   '/admin/leaderboards': typeof AdminLeaderboardsRoute
@@ -197,6 +206,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/leaderboards'
     | '/admin/activity'
+    | '/admin/analytics'
     | '/admin/athletes'
     | '/admin/gallery'
     | '/admin/leaderboards'
@@ -217,6 +227,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/leaderboards'
     | '/admin/activity'
+    | '/admin/analytics'
     | '/admin/athletes'
     | '/admin/gallery'
     | '/admin/leaderboards'
@@ -238,6 +249,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/leaderboards'
     | '/admin/activity'
+    | '/admin/analytics'
     | '/admin/athletes'
     | '/admin/gallery'
     | '/admin/leaderboards'
@@ -384,6 +396,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAthletesRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/analytics': {
+      id: '/admin/analytics'
+      path: '/analytics'
+      fullPath: '/admin/analytics'
+      preLoaderRoute: typeof AdminAnalyticsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/activity': {
       id: '/admin/activity'
       path: '/activity'
@@ -415,6 +434,7 @@ const AdminAthletesRouteWithChildren = AdminAthletesRoute._addFileChildren(
 
 interface AdminRouteChildren {
   AdminActivityRoute: typeof AdminActivityRoute
+  AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminAthletesRoute: typeof AdminAthletesRouteWithChildren
   AdminGalleryRoute: typeof AdminGalleryRoute
   AdminLeaderboardsRoute: typeof AdminLeaderboardsRoute
@@ -429,6 +449,7 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminActivityRoute: AdminActivityRoute,
+  AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminAthletesRoute: AdminAthletesRouteWithChildren,
   AdminGalleryRoute: AdminGalleryRoute,
   AdminLeaderboardsRoute: AdminLeaderboardsRoute,
