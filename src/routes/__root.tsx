@@ -73,17 +73,22 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Elite X — AJ Fitness Club | Top 10 Transformation Quest" },
+      { title: "Elite X — Top 10 Transformation Quest | AJ Fitness Club" },
       {
         name: "description",
         content:
           "Elite X is AJ Fitness Club's invitation-only 90-day Top 10 Transformation Quest. Track the athletes, leaderboards and the road to champion.",
       },
       { name: "author", content: "AJ Fitness Club" },
-      { property: "og:title", content: "Elite X — Top 10 Transformation Quest" },
-      { property: "og:description", content: "90 days. 10 elite athletes. One champion. By AJ Fitness Club." },
+      { property: "og:title", content: "Elite X — Top 10 Transformation Quest | AJ Fitness Club" },
+      { property: "og:description", content: "The 90-day, invitation-only transformation quest. Meet the 10 elite athletes chasing the AJ Fitness Club championship." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Elite X — Top 10 Transformation Quest | AJ Fitness Club" },
+      { name: "description", content: "The 90-day, invitation-only transformation quest. Meet the 10 elite athletes chasing the AJ Fitness Club championship." },
+      { name: "twitter:description", content: "The 90-day, invitation-only transformation quest. Meet the 10 elite athletes chasing the AJ Fitness Club championship." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/i2cx1AbZeiMc4VVb14rEuJwzjOk1/social-images/social-1783235274784-2c8cad64-ade4-48af-a4da-3d969af3f448.webp" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/i2cx1AbZeiMc4VVb14rEuJwzjOk1/social-images/social-1783235274784-2c8cad64-ade4-48af-a4da-3d969af3f448.webp" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
