@@ -259,31 +259,100 @@ export function useUpdateSettings() {
 }
 
 // ---------- Dashboard ----------
+export type DashboardSummary = {
+  total_athletes: number; current_day: number; challenge_duration: number; days_remaining: number;
+  current_leader: string; average_attendance: number; average_power: number;
+  highest_pushups: number; highest_pullups: number; highest_chinups: number;
+  attendance_today: number; workouts_today: number; pending_today: number;
+  highest_pushups_today: number; highest_pullups_today: number; highest_chinups_today: number;
+  total_pushups: number; total_pullups: number; total_chinups: number; total_sessions: number;
+};
+
 export function useDashboardSummary() {
+  useRealtime("daily_workouts", [["dashboard-summary"]]);
+  useRealtime("athletes", [["dashboard-summary"]]);
+  useRealtime("challenge_settings", [["dashboard-summary"]]);
   return useQuery({
     queryKey: ["dashboard-summary"],
-    queryFn: async () => {
+    queryFn: async (): Promise<DashboardSummary> => {
       const { data, error } = await supabase.rpc("get_dashboard_summary");
       if (error) throw error;
-      return data as {
-        total_athletes: number; current_day: number; current_leader: string;
-        average_attendance: number; highest_pushups: number;
-        highest_pullups: number; highest_chinups: number;
-      };
+      return data as DashboardSummary;
+    },
+  });
+}
+
+export function useWorkoutTrend(days = 14) {
+  useRealtime("daily_workouts", [["workout-trend", days]]);
+  return useQuery({
+    queryKey: ["workout-trend", days],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_workout_trend", { _days: days });
+      if (error) throw error;
+      return (data ?? []) as Array<{ day: string; pushups: number; pullups: number; chinups: number }>;
+    },
+  });
+}
+
+export function useAttendanceTrend(weeks = 9) {
+  useRealtime("daily_workouts", [["attendance-trend", weeks]]);
+  return useQuery({
+    queryKey: ["attendance-trend", weeks],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_attendance_trend", { _weeks: weeks });
+      if (error) throw error;
+      return (data ?? []) as Array<{ week: string; present: number; absent: number }>;
+    },
+  });
+}
+
+export function useWeeklyPower(weeks = 9) {
+  useRealtime("daily_workouts", [["weekly-power", weeks]]);
+  return useQuery({
+    queryKey: ["weekly-power", weeks],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_weekly_power", { _weeks: weeks });
+      if (error) throw error;
+      return (data ?? []) as Array<{ week: string; power: number }>;
+    },
+  });
+}
+
+export function useAthleteWeekly(athleteId: string | undefined) {
+  return useQuery({
+    queryKey: ["athlete-weekly", athleteId],
+    enabled: !!athleteId,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_athlete_weekly", { _athlete: athleteId });
+      if (error) throw error;
+      return (data ?? []) as Array<{ week: string; pushups: number; pullups: number; chinups: number; power: number; attendance: number }>;
+    },
+  });
+}
+
+export function useAthleteStreaks(athleteId: string | undefined) {
+  return useQuery({
+    queryKey: ["athlete-streaks", athleteId],
+    enabled: !!athleteId,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_athlete_streaks", { _athlete: athleteId });
+      if (error) throw error;
+      return data as { current: number; longest: number; broken: number; perfect: boolean };
     },
   });
 }
 
 // ---------- Activity ----------
-export function useActivityLogs() {
+export function useActivityLogs(limit = 100) {
   useRealtime("activity_logs", [["activity"]]);
   return useQuery({
-    queryKey: ["activity"],
+    queryKey: ["activity", limit],
     queryFn: async () => {
       const { data, error } = await supabase.from("activity_logs")
-        .select("*").order("created_at", { ascending: false }).limit(100);
+        .select("*").order("created_at", { ascending: false }).limit(limit);
       if (error) throw error;
-      return data as Array<{ id: string; action: string; description: string | null; admin_email: string | null; created_at: string }>;
+      return data as Array<{ id: string; action: string; description: string | null; admin_email: string | null; entity_type: string | null; created_at: string }>;
     },
   });
 }
+

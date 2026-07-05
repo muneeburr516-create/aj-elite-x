@@ -8,35 +8,68 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { athletes, generateWorkoutLog } from "@/data/elite";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Save, RotateCcw } from "lucide-react";
+import { Save, RotateCcw, Loader2 } from "lucide-react";
+import { useAthletes, useSettings, useUpsertWorkout, useWorkouts } from "@/hooks/useElite";
+import { isFriday, workoutPower } from "@/lib/analytics";
 
-export const Route = createFileRoute("/admin/workouts")({
-  component: WorkoutTrackerPage,
-});
+export const Route = createFileRoute("/admin/workouts")({ component: WorkoutTrackerPage });
 
 function WorkoutTrackerPage() {
-  const [slug, setSlug] = useState(athletes[0].slug);
-  const [day, setDay] = useState(62);
+  const { data: athletes = [] } = useAthletes();
+  const { data: settings } = useSettings();
+  const upsert = useUpsertWorkout();
+
+  const [athleteId, setAthleteId] = useState<string>("");
+  useEffect(() => { if (!athleteId && athletes[0]) setAthleteId(athletes[0].id); }, [athletes, athleteId]);
+
+  const [day, setDay] = useState<number>(settings?.current_day ?? 1);
+  useEffect(() => { if (settings) setDay(settings.current_day); }, [settings]);
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
-  const [attendance, setAttendance] = useState<"PRESENT" | "ABSENT" | "REST">("PRESENT");
-  const [pu, setPu] = useState<[number, number, number]>([50, 45, 40]);
-  const [pl, setPl] = useState<[number, number, number]>([12, 10, 8]);
-  const [cu, setCu] = useState<[number, number, number]>([10, 8, 6]);
+  const friday = isFriday(date);
+  const [attendance, setAttendance] = useState<"PRESENT" | "ABSENT" | "REST">(friday ? "REST" : "PRESENT");
+  useEffect(() => { if (friday) setAttendance("REST"); }, [friday]);
+
+  const [pu, setPu] = useState<[number, number, number]>([0, 0, 0]);
+  const [pl, setPl] = useState<[number, number, number]>([0, 0, 0]);
+  const [cu, setCu] = useState<[number, number, number]>([0, 0, 0]);
   const [notes, setNotes] = useState("");
 
-  const athlete = athletes.find((a) => a.slug === slug)!;
-  const history = useMemo(() => generateWorkoutLog(athlete.slug.charCodeAt(0)).slice(-10).reverse(), [athlete.slug]);
+  const athlete = athletes.find((a) => a.id === athleteId);
+  const { data: history = [] } = useWorkouts(athleteId || undefined);
+  const last10 = useMemo(() => [...history].slice(-10).reverse(), [history]);
 
   function reset() {
-    setPu([0, 0, 0]); setPl([0, 0, 0]); setCu([0, 0, 0]); setNotes(""); setAttendance("PRESENT");
+    setPu([0, 0, 0]); setPl([0, 0, 0]); setCu([0, 0, 0]); setNotes("");
+    setAttendance(friday ? "REST" : "PRESENT");
     toast("Form reset");
   }
-  function save() { toast.success(`Workout saved — Day ${day} · ${athlete.name}`); }
 
-  const total = pu.reduce((a, b) => a + b, 0) + pl.reduce((a, b) => a + b, 0) * 6 + cu.reduce((a, b) => a + b, 0) * 5;
+  async function save() {
+    if (!athleteId) return toast.error("Pick an athlete");
+    if ([...pu, ...pl, ...cu].some((v) => v < 0)) return toast.error("Reps cannot be negative");
+    try {
+      await upsert.mutateAsync({
+        athlete_id: athleteId, challenge_day: day, workout_date: date, attendance,
+        pushup_set_1: pu[0], pushup_set_2: pu[1], pushup_set_3: pu[2],
+        pullup_set_1: pl[0], pullup_set_2: pl[1], pullup_set_3: pl[2],
+        chinup_set_1: cu[0], chinup_set_2: cu[1], chinup_set_3: cu[2],
+        notes: notes || null,
+      });
+      toast.success(`Workout saved — Day ${day} · ${athlete?.full_name ?? ""}`);
+    } catch (e: any) {
+      const msg = e.message ?? "Save failed";
+      toast.error(msg.includes("uniq") ? "This day is already logged for this athlete" : msg);
+    }
+  }
+
+  const total = workoutPower({
+    attendance,
+    pushup_set_1: pu[0], pushup_set_2: pu[1], pushup_set_3: pu[2],
+    pullup_set_1: pl[0], pullup_set_2: pl[1], pullup_set_3: pl[2],
+    chinup_set_1: cu[0], chinup_set_2: cu[1], chinup_set_3: cu[2],
+  });
 
   return (
     <AdminShell title="Workout Tracker" subtitle="Log daily sessions rep by rep">
@@ -45,13 +78,13 @@ function WorkoutTrackerPage() {
           <div className="grid md:grid-cols-3 gap-3 mb-6">
             <div>
               <Label>Athlete</Label>
-              <Select value={slug} onValueChange={setSlug}>
-                <SelectTrigger className="bg-white/5 border-white/10 mt-1"><SelectValue /></SelectTrigger>
-                <SelectContent>{athletes.map((a) => <SelectItem key={a.slug} value={a.slug}>{a.name}</SelectItem>)}</SelectContent>
+              <Select value={athleteId} onValueChange={setAthleteId}>
+                <SelectTrigger className="bg-white/5 border-white/10 mt-1"><SelectValue placeholder="Choose..." /></SelectTrigger>
+                <SelectContent>{athletes.map((a) => <SelectItem key={a.id} value={a.id}>{a.full_name}</SelectItem>)}</SelectContent>
               </Select>
             </div>
-            <div><Label>Challenge Day</Label><Input type="number" value={day} onChange={(e) => setDay(+e.target.value)} className="bg-white/5 border-white/10 mt-1" /></div>
-            <div><Label>Date</Label><Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="bg-white/5 border-white/10 mt-1" /></div>
+            <div><Label>Challenge Day</Label><Input type="number" min={1} value={day} onChange={(e) => setDay(+e.target.value)} className="bg-white/5 border-white/10 mt-1" /></div>
+            <div><Label>Date {friday && <span className="text-amber-400 text-[10px] ml-1">FRIDAY · REST</span>}</Label><Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="bg-white/5 border-white/10 mt-1" /></div>
           </div>
 
           <div className="mb-6">
@@ -62,7 +95,7 @@ function WorkoutTrackerPage() {
                   attendance === v ? "border-primary bg-primary/15 text-white glow-red" : "border-white/10 bg-white/5 text-white/60 hover:border-white/20"
                 }`}>
                   <RadioGroupItem value={v} className="sr-only" />
-                  {v === "REST" ? "FRIDAY OFF" : v}
+                  {v === "REST" ? "REST/OFF" : v}
                 </label>
               ))}
             </RadioGroup>
@@ -81,7 +114,7 @@ function WorkoutTrackerPage() {
                     <div key={idx} className="glass rounded-lg p-3">
                       <div className="text-[10px] tracking-widest text-white/40 mb-1">SET {idx + 1}</div>
                       <Input type="number" min={0} disabled={attendance !== "PRESENT"} value={state[idx]}
-                        onChange={(e) => { const n = [...state] as [number, number, number]; n[idx] = +e.target.value || 0; setter(n); }}
+                        onChange={(e) => { const n = [...state] as [number, number, number]; n[idx] = Math.max(0, +e.target.value || 0); setter(n); }}
                         className="bg-transparent border-0 text-2xl font-display font-bold p-0 h-auto focus-visible:ring-0" />
                     </div>
                   ))}
@@ -99,25 +132,28 @@ function WorkoutTrackerPage() {
             </div>
             <div className="flex gap-2">
               <Button variant="outline" onClick={reset} className="border-white/10 bg-white/5"><RotateCcw className="h-4 w-4 mr-2" /> Reset</Button>
-              <Button onClick={save} className="bg-primary hover:bg-primary/90 glow-red"><Save className="h-4 w-4 mr-2" /> Save Session</Button>
+              <Button onClick={save} disabled={upsert.isPending} className="bg-primary hover:bg-primary/90 glow-red">
+                {upsert.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />} Save Session
+              </Button>
             </div>
           </div>
         </GlassCard>
 
         <GlassCard>
-          <h3 className="font-display text-lg mb-3">{athlete.name} — Last 10</h3>
+          <h3 className="font-display text-lg mb-3">{athlete?.full_name ?? "—"} — Last 10</h3>
           <div className="space-y-2 max-h-[560px] overflow-y-auto pr-1">
-            {history.map((d) => (
-              <div key={d.day} className="rounded-xl border border-white/10 bg-white/5 p-3 text-sm">
+            {last10.length === 0 && <div className="text-xs text-white/40 py-6 text-center">No sessions logged yet.</div>}
+            {last10.map((d) => (
+              <div key={d.id} className="rounded-xl border border-white/10 bg-white/5 p-3 text-sm">
                 <div className="flex items-center justify-between">
-                  <div className="font-medium">Day {d.day}</div>
-                  <Badge variant="outline" className={d.attendance === "REST" ? "border-amber-500/30 text-amber-300" : "border-primary/30 text-primary"}>{d.attendance}</Badge>
+                  <div className="font-medium">Day {d.challenge_day}</div>
+                  <Badge variant="outline" className={d.attendance === "REST" ? "border-amber-500/30 text-amber-300" : d.attendance === "ABSENT" ? "border-red-500/30 text-red-300" : "border-primary/30 text-primary"}>{d.attendance}</Badge>
                 </div>
-                <div className="text-xs text-white/50">{d.date}</div>
+                <div className="text-xs text-white/50">{d.workout_date}</div>
                 <div className="mt-2 grid grid-cols-3 gap-2 text-[11px]">
-                  <div><span className="text-white/40">PU</span> {d.pushups.join("·")}</div>
-                  <div><span className="text-white/40">PL</span> {d.pullups.join("·")}</div>
-                  <div><span className="text-white/40">CU</span> {d.chinups.join("·")}</div>
+                  <div><span className="text-white/40">PU</span> {d.pushup_set_1}·{d.pushup_set_2}·{d.pushup_set_3}</div>
+                  <div><span className="text-white/40">PL</span> {d.pullup_set_1}·{d.pullup_set_2}·{d.pullup_set_3}</div>
+                  <div><span className="text-white/40">CU</span> {d.chinup_set_1}·{d.chinup_set_2}·{d.chinup_set_3}</div>
                 </div>
               </div>
             ))}
