@@ -7,7 +7,7 @@ import { useSettings, useActivityLogs, useAthletes } from "@/hooks/useElite";
 import { useMemo, useState } from "react";
 
 export function AdminTopbar({ title, subtitle }: { title: string; subtitle?: string }) {
-  const today = new Date().toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
+  const today = new Date(2026, 6, 1).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
   const { data: settings } = useSettings();
   const { data: activity = [] } = useActivityLogs(10);
   const { data: athletes = [] } = useAthletes();
