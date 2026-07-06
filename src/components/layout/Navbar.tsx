@@ -80,8 +80,7 @@ export function Navbar() {
 
           <div className="hidden md:flex items-center">
             <span className="px-3 py-1.5 text-[11px] tracking-[0.25em] font-display border border-primary/40 rounded-full text-primary bg-primary/10">
-              QUEST DAY 62 / 90
-            </span>
+              QUEST DAY {questDay} / {QUEST_DURATION}
           </div>
 
           <button
