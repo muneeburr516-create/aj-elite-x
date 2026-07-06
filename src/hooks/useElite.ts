@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useId } from "react";
 import { supabase } from "@/lib/supabase";
 import type {
   Athlete, DailyWorkout, BodyMeasurement, GalleryImage,
@@ -7,18 +7,25 @@ import type {
 } from "@/lib/database.types";
 
 // ---------- Realtime helper ----------
+// Each hook instance gets a UNIQUE channel name so that duplicate hook usages
+// (e.g. multiple widgets subscribing to `daily_workouts`) don't collide on a
+// shared topic — which triggers Supabase's "cannot add postgres_changes
+// callbacks ... after subscribe()" error. All .on() listeners are registered
+// before .subscribe(), and channels are torn down on unmount.
 export function useRealtime(table: string, keys: unknown[][]) {
   const qc = useQueryClient();
+  const id = useId();
   useEffect(() => {
-    const ch = supabase
-      .channel(`rt-${table}`)
-      .on("postgres_changes", { event: "*", schema: "public", table }, () => {
-        keys.forEach((k) => qc.invalidateQueries({ queryKey: k }));
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(ch); };
+    const channel = supabase.channel(`rt-${table}-${id}-${Math.random().toString(36).slice(2, 8)}`);
+    channel.on(
+      "postgres_changes",
+      { event: "*", schema: "public", table },
+      () => { keys.forEach((k) => qc.invalidateQueries({ queryKey: k })); },
+    );
+    channel.subscribe();
+    return () => { supabase.removeChannel(channel); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [table]);
+  }, [table, id]);
 }
 
 // ---------- Athletes ----------
