@@ -12,9 +12,23 @@ const links = [
   { to: "/contact", label: "Contact" },
 ] as const;
 
+// Challenge starts at day 1 on this date (local time). The quest day
+// increments automatically at midnight every night.
+const QUEST_START = new Date(2026, 5, 30); // 30 June 2026 = Day 1
+const QUEST_DURATION = 90;
+
+function computeQuestDay() {
+  const now = new Date();
+  const start = new Date(QUEST_START.getFullYear(), QUEST_START.getMonth(), QUEST_START.getDate());
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const diff = Math.floor((today.getTime() - start.getTime()) / 86_400_000) + 1;
+  return Math.min(Math.max(diff, 1), QUEST_DURATION);
+}
+
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const [questDay, setQuestDay] = useState(computeQuestDay);
   const loc = useLocation();
 
   useEffect(() => {
@@ -22,6 +36,18 @@ export function Navbar() {
     onScroll();
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Auto-refresh the quest day at the next local midnight, then every 24h.
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval> | undefined;
+    const now = new Date();
+    const nextMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 1);
+    const timeout = setTimeout(() => {
+      setQuestDay(computeQuestDay());
+      interval = setInterval(() => setQuestDay(computeQuestDay()), 86_400_000);
+    }, nextMidnight.getTime() - now.getTime());
+    return () => { clearTimeout(timeout); if (interval) clearInterval(interval); };
   }, []);
 
   useEffect(() => setOpen(false), [loc.pathname]);
@@ -54,7 +80,7 @@ export function Navbar() {
 
           <div className="hidden md:flex items-center">
             <span className="px-3 py-1.5 text-[11px] tracking-[0.25em] font-display border border-primary/40 rounded-full text-primary bg-primary/10">
-              QUEST DAY 62 / 90
+              QUEST DAY {questDay} / {QUEST_DURATION}
             </span>
           </div>
 
