@@ -16,6 +16,7 @@ export type DisplayAthlete = {
   initials: string;
   bio: string;
   challengeStarted: string;
+  photoUrl: string | null;
 };
 
 const PALETTE = [
