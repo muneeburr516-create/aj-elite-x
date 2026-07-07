@@ -16,13 +16,14 @@ import {
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Search, Pencil, Trash2, Eye, ArrowUpDown, Loader2 } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, Eye, ArrowUpDown, Loader2, Upload, X } from "lucide-react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { useAthletes, useLeaderboard, useUpsertAthlete, useDeleteAthlete } from "@/hooks/useElite";
 import { initialsFor, mergeAthletesWithLeaderboard } from "@/lib/athlete-adapter";
+import { supabase } from "@/lib/supabase";
 import type { Athlete } from "@/lib/database.types";
 
 export const Route = createFileRoute("/admin/athletes")({
