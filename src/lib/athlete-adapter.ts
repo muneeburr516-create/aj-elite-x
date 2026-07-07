@@ -56,6 +56,7 @@ export function toDisplayAthlete(
     initials: initialsFor(a.full_name),
     bio: a.short_bio ?? "",
     challengeStarted: a.joined_at,
+    photoUrl: a.photo_url ?? null,
   };
 }
 
