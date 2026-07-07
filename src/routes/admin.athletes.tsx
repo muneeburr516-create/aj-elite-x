@@ -232,3 +232,73 @@ function FieldError({ msg }: { msg?: string }) {
   if (!msg) return null;
   return <p className="text-[11px] text-red-400 mt-1">{msg}</p>;
 }
+
+const MAX_PHOTO_MB = 5;
+const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+
+function PhotoUploader({
+  slug, fullName, value, onChange,
+}: { slug: string; fullName: string; value: string | null; onChange: (url: string | null) => void }) {
+  const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [dragOver, setDragOver] = useState(false);
+
+  async function upload(file: File) {
+    if (!ALLOWED_TYPES.includes(file.type)) return toast.error("Use JPG, PNG, WEBP or GIF");
+    if (file.size > MAX_PHOTO_MB * 1024 * 1024) return toast.error(`Max ${MAX_PHOTO_MB}MB`);
+    const safeSlug = (slug || fullName).toLowerCase().replace(/[^a-z0-9-]+/g, "-") || "athlete";
+    const ext = file.name.split(".").pop() || "jpg";
+    const path = `${safeSlug}/profile-${Date.now()}.${ext}`;
+    setBusy(true); setProgress(10);
+    try {
+      const { error } = await supabase.storage.from("athletes").upload(path, file, { upsert: true, contentType: file.type });
+      if (error) throw error;
+      setProgress(80);
+      const { data } = supabase.storage.from("athletes").getPublicUrl(path);
+      onChange(data.publicUrl);
+      setProgress(100);
+      toast.success("Photo uploaded");
+    } catch (e: any) {
+      toast.error(e.message ?? "Upload failed");
+    } finally {
+      setTimeout(() => { setBusy(false); setProgress(0); }, 400);
+    }
+  }
+
+  return (
+    <div>
+      <Label>Profile Picture</Label>
+      <div
+        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={(e) => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files?.[0]; if (f) upload(f); }}
+        className={`mt-1 flex items-center gap-4 rounded-xl border border-dashed p-3 transition ${dragOver ? "border-primary bg-primary/10" : "border-white/15 bg-white/5"}`}
+      >
+        <div className="h-16 w-16 rounded-lg overflow-hidden bg-gradient-to-br from-primary to-red-900 grid place-items-center text-xs font-bold shrink-0">
+          {value ? <img src={value} alt="preview" className="h-full w-full object-cover" /> : initialsFor(fullName || "AJ")}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <label className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-primary/20 border border-primary/40 text-primary text-xs cursor-pointer hover:bg-primary/30">
+              <Upload className="h-3.5 w-3.5" />
+              {value ? "Replace" : "Upload"}
+              <input type="file" accept="image/*" className="hidden" disabled={busy}
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); e.currentTarget.value = ""; }} />
+            </label>
+            {value && (
+              <button type="button" onClick={() => onChange(null)} className="inline-flex items-center gap-1 px-2 py-1.5 rounded-md bg-white/5 border border-white/10 text-white/60 text-xs hover:text-white">
+                <X className="h-3.5 w-3.5" /> Remove
+              </button>
+            )}
+          </div>
+          <div className="text-[10px] text-white/40 mt-1">Drag & drop or click. JPG/PNG/WEBP · max {MAX_PHOTO_MB}MB.</div>
+          {busy && (
+            <div className="mt-2 h-1 rounded-full bg-white/10 overflow-hidden">
+              <div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} />
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
