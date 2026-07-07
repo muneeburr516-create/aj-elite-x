@@ -43,7 +43,7 @@ function AthleteProfile() {
     slug: athlete.slug, name: athlete.full_name, age: athlete.age ?? 0, weight: Number(athlete.weight ?? 0),
     height: Number(athlete.height ?? 0), trainer: athlete.trainer ?? "—", rank: 0, attendance: 0, streak: 0,
     powerScore: 0, color: "from-red-600 to-red-900", initials: initialsFor(athlete.full_name),
-    bio: athlete.short_bio ?? "", challengeStarted: athlete.joined_at,
+    bio: athlete.short_bio ?? "", challengeStarted: athlete.joined_at, photoUrl: athlete.photo_url ?? null,
   };
   const diffs = measurementDiffs(measurements);
   const phases = timelinePhases(gallery.map((g) => ({ uploaded_at: g.uploaded_at, image_url: g.image_url, caption: g.caption })));

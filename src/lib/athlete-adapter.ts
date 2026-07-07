@@ -16,6 +16,7 @@ export type DisplayAthlete = {
   initials: string;
   bio: string;
   challengeStarted: string;
+  photoUrl: string | null;
 };
 
 const PALETTE = [
@@ -55,6 +56,7 @@ export function toDisplayAthlete(
     initials: initialsFor(a.full_name),
     bio: a.short_bio ?? "",
     challengeStarted: a.joined_at,
+    photoUrl: a.photo_url ?? null,
   };
 }
 
@@ -92,5 +94,6 @@ export function summaryToDisplay(s: ProfileSummary, index = 0): DisplayAthlete {
     initials: initialsFor(s.full_name),
     bio: s.short_bio ?? "",
     challengeStarted: s.joined_at,
+    photoUrl: s.photo_url ?? null,
   };
 }

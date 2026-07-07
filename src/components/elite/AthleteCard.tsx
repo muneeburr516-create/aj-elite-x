@@ -16,9 +16,15 @@ export function AthleteAvatar({ athlete, size = "md" }: { athlete: Athlete; size
         sizes[size],
       )}
     >
-      <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_top_left,white,transparent_60%)]" />
-      <div className="absolute inset-0 opacity-20 mix-blend-overlay bg-[repeating-linear-gradient(45deg,transparent,transparent_6px,rgba(0,0,0,0.4)_6px,rgba(0,0,0,0.4)_7px)]" />
-      <span className="relative">{athlete.initials}</span>
+      {athlete.photoUrl ? (
+        <img src={athlete.photoUrl} alt={athlete.name} className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
+      ) : (
+        <>
+          <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_top_left,white,transparent_60%)]" />
+          <div className="absolute inset-0 opacity-20 mix-blend-overlay bg-[repeating-linear-gradient(45deg,transparent,transparent_6px,rgba(0,0,0,0.4)_6px,rgba(0,0,0,0.4)_7px)]" />
+          <span className="relative">{athlete.initials}</span>
+        </>
+      )}
     </div>
   );
 }

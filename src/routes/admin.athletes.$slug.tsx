@@ -42,7 +42,11 @@ function AthleteProfileAdmin() {
 
       <div className="grid lg:grid-cols-[280px_1fr] gap-4">
         <GlassCard className="p-6">
-          <div className="h-32 w-32 mx-auto rounded-2xl bg-gradient-to-br from-primary to-red-900 flex items-center justify-center text-4xl font-display font-bold glow-red">{initialsFor(athlete.full_name)}</div>
+          <div className="h-32 w-32 mx-auto rounded-2xl bg-gradient-to-br from-primary to-red-900 flex items-center justify-center text-4xl font-display font-bold glow-red overflow-hidden">
+            {athlete.photo_url ? (
+              <img src={athlete.photo_url} alt={athlete.full_name} className="h-full w-full object-cover" />
+            ) : initialsFor(athlete.full_name)}
+          </div>
           <div className="text-center mt-4">
             <h2 className="font-display text-xl font-bold">{athlete.full_name}</h2>
             <Badge className="mt-2 bg-primary/20 text-primary border border-primary/40">Rank #{summary?.current_rank ?? "—"}</Badge>
