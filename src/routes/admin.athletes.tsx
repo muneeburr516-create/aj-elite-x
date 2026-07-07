@@ -133,7 +133,9 @@ function AthletesPage() {
                   <TableRow key={r.slug} className="border-white/5 hover:bg-white/[0.03]">
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        <div className={`h-9 w-9 rounded-lg bg-gradient-to-br ${r.color} flex items-center justify-center text-xs font-bold`}>{initialsFor(r.name)}</div>
+                        <div className={`h-9 w-9 rounded-lg bg-gradient-to-br ${r.color} flex items-center justify-center text-xs font-bold overflow-hidden`}>
+                          {r.photoUrl ? <img src={r.photoUrl} alt={r.name} className="h-full w-full object-cover" /> : initialsFor(r.name)}
+                        </div>
                         <div>
                           <div className="font-medium">{r.name}</div>
                           <div className="text-xs text-white/40">Rank #{r.rank || "—"}</div>
