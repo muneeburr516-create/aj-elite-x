@@ -68,7 +68,7 @@ function AthletesPage() {
 
   function openAdd() {
     setEditing(null);
-    form.reset({ full_name: "", slug: "", trainer: "Coach AJ", status: "active" });
+    form.reset({ full_name: "", slug: "", trainer: "Coach AJ", status: "active", photo_url: null });
     setOpen(true);
   }
   function openEdit(a: Athlete) {
@@ -77,6 +77,7 @@ function AthletesPage() {
       full_name: a.full_name, slug: a.slug,
       age: a.age ?? undefined, height: Number(a.height ?? 0) || undefined, weight: Number(a.weight ?? 0) || undefined,
       trainer: a.trainer ?? "", short_bio: a.short_bio ?? "", status: a.status,
+      photo_url: a.photo_url ?? null,
     });
     setOpen(true);
   }
