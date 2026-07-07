@@ -193,6 +193,14 @@ function AthletesPage() {
             <DialogDescription>Writes directly to Supabase. Public site updates instantly.</DialogDescription>
           </DialogHeader>
           <form onSubmit={form.handleSubmit(submit)} className="grid grid-cols-2 gap-3">
+            <div className="col-span-2">
+              <PhotoUploader
+                slug={form.watch("slug")}
+                fullName={form.watch("full_name") || "athlete"}
+                value={form.watch("photo_url") ?? null}
+                onChange={(url) => form.setValue("photo_url", url, { shouldDirty: true })}
+              />
+            </div>
             <div className="col-span-2"><Label>Full Name</Label><Input {...form.register("full_name")} className="bg-white/5 border-white/10 mt-1" /><FieldError msg={form.formState.errors.full_name?.message} /></div>
             <div className="col-span-2"><Label>Slug (URL id)</Label><Input {...form.register("slug")} placeholder="e.g. muneeb" className="bg-white/5 border-white/10 mt-1" /><FieldError msg={form.formState.errors.slug?.message} /></div>
             <div><Label>Age</Label><Input type="number" {...form.register("age")} className="bg-white/5 border-white/10 mt-1" /></div>
