@@ -39,6 +39,7 @@ const schema = z.object({
   trainer: z.string().max(60).optional(),
   short_bio: z.string().max(400).optional(),
   status: z.enum(["active", "inactive", "disqualified"]),
+  photo_url: z.string().url().nullable().optional(),
 });
 type FormV = z.infer<typeof schema>;
 
