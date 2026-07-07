@@ -94,5 +94,6 @@ export function summaryToDisplay(s: ProfileSummary, index = 0): DisplayAthlete {
     initials: initialsFor(s.full_name),
     bio: s.short_bio ?? "",
     challengeStarted: s.joined_at,
+    photoUrl: s.photo_url ?? null,
   };
 }
