@@ -10,8 +10,12 @@ import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useMemo, useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Save, RotateCcw, Loader2 } from "lucide-react";
+import { Save, RotateCcw, Loader2, Zap } from "lucide-react";
 import { useAthletes, useSettings, useUpsertWorkout, useWorkouts } from "@/hooks/useElite";
+import { useAthleteProgress, useAdvancePhase } from "@/hooks/useXp";
+import { XpLevelCard } from "@/components/xp/XpLevelCard";
+import { PhaseProgressCard } from "@/components/xp/PhaseProgressCard";
+import { FALLBACK_EXERCISES, SLOT_ORDER, exerciseFor, previewWorkoutXp, formatXp } from "@/lib/xp";
 import { isFriday, workoutPower } from "@/lib/analytics";
 
 export const Route = createFileRoute("/admin/workouts")({ component: WorkoutTrackerPage });
