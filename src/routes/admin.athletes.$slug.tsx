@@ -72,7 +72,7 @@ function AthleteProfileAdmin() {
         <div>
           <Tabs defaultValue="overview">
             <TabsList className="glass border border-white/10 bg-transparent flex-wrap h-auto">
-              {["overview", "workouts", "measurements", "gallery", "analytics"].map((t) => (
+              {["overview", "workouts", "measurements", "gallery", "analytics", "progression"].map((t) => (
                 <TabsTrigger key={t} value={t} className="data-[state=active]:bg-primary data-[state=active]:text-white capitalize">{t}</TabsTrigger>
               ))}
             </TabsList>
