@@ -113,13 +113,22 @@ function WorkoutTrackerPage() {
             </RadioGroup>
           </div>
 
-          {(["Push-ups", "Pull-ups", "Chin-ups"] as const).map((label, i) => {
-            const [state, setter] = [[pu, setPu], [pl, setPl], [cu, setCu]][i] as [number[], (v: [number, number, number]) => void];
+          <div className="mb-4 flex items-center gap-2 text-[10px] tracking-[0.25em] text-white/40">
+            <Zap className="h-3 w-3 text-primary" />
+            {(progress?.phase_name ?? "PHASE 1").toUpperCase()} TEMPLATE
+          </div>
+
+          {SLOT_ORDER.map((slot) => {
+            const ex = exerciseFor(exercises, slot);
+            if (!ex) return null;
+            const map = { pushup: [pu, setPu], pullup: [pl, setPl], chinup: [cu, setCu] } as const;
+            const [state, setter] = map[slot] as unknown as [number[], (v: [number, number, number]) => void];
+            const reps = state.reduce((a, b) => a + b, 0);
             return (
-              <div key={label} className="mb-5">
+              <div key={slot} className="mb-5">
                 <div className="flex items-center justify-between mb-2">
-                  <Label>{label}</Label>
-                  <Badge variant="outline" className="border-primary/30 text-primary">Total: {state.reduce((a, b) => a + b, 0)}</Badge>
+                  <Label>{ex.display_name} <span className="text-white/40 text-[10px] ml-1">{ex.xp_per_rep} XP/REP</span></Label>
+                  <Badge variant="outline" className="border-primary/30 text-primary">Total: {reps} · {reps * ex.xp_per_rep} XP</Badge>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
                   {[0, 1, 2].map((idx) => (
@@ -138,10 +147,17 @@ function WorkoutTrackerPage() {
           <div className="mb-6"><Label>Notes (optional)</Label><Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Form cues, PR call-outs, injuries..." className="bg-white/5 border-white/10 mt-1" rows={3} /></div>
 
           <div className="flex items-center justify-between pt-4 border-t border-white/10">
-            <div>
-              <div className="text-[10px] tracking-widest text-white/40">SESSION POWER</div>
-              <div className="font-display text-3xl text-gradient-red">{total}</div>
+            <div className="flex gap-6">
+              <div>
+                <div className="text-[10px] tracking-widest text-white/40">SESSION POWER</div>
+                <div className="font-display text-3xl text-gradient-red">{total}</div>
+              </div>
+              <div>
+                <div className="text-[10px] tracking-widest text-white/40">SESSION XP</div>
+                <div className="font-display text-3xl text-gradient-red">+{formatXp(xpPreview)}</div>
+              </div>
             </div>
+
             <div className="flex gap-2">
               <Button variant="outline" onClick={reset} className="border-white/10 bg-white/5"><RotateCcw className="h-4 w-4 mr-2" /> Reset</Button>
               <Button onClick={save} disabled={upsert.isPending} className="bg-primary hover:bg-primary/90 glow-red">
