@@ -44,6 +44,11 @@ function WorkoutTrackerPage() {
   const { data: history = [] } = useWorkouts(athleteId || undefined);
   const last10 = useMemo(() => [...history].slice(-10).reverse(), [history]);
 
+  // Phase-driven exercise template + XP engine
+  const { data: progress } = useAthleteProgress(athleteId || undefined);
+  const advance = useAdvancePhase();
+  const exercises = progress?.exercises?.length ? progress.exercises : FALLBACK_EXERCISES;
+
   function reset() {
     setPu([0, 0, 0]); setPl([0, 0, 0]); setCu([0, 0, 0]); setNotes("");
     setAttendance(friday ? "REST" : "PRESENT");
@@ -61,7 +66,7 @@ function WorkoutTrackerPage() {
         chinup_set_1: cu[0], chinup_set_2: cu[1], chinup_set_3: cu[2],
         notes: notes || null,
       });
-      toast.success(`Workout saved — Day ${day} · ${athlete?.full_name ?? ""}`);
+      toast.success(`Workout saved — Day ${day} · ${athlete?.full_name ?? ""} · +${formatXp(xpPreview)} XP`);
     } catch (e: any) {
       const msg = e.message ?? "Save failed";
       toast.error(msg.includes("uniq") ? "This day is already logged for this athlete" : msg);
@@ -74,6 +79,9 @@ function WorkoutTrackerPage() {
     pullup_set_1: pl[0], pullup_set_2: pl[1], pullup_set_3: pl[2],
     chinup_set_1: cu[0], chinup_set_2: cu[1], chinup_set_3: cu[2],
   });
+
+  const xpPreview = previewWorkoutXp(exercises, { pushup: pu, pullup: pl, chinup: cu }, attendance);
+
 
   return (
     <AdminShell title="Workout Tracker" subtitle="Log daily sessions rep by rep">
