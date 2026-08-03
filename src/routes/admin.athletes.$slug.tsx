@@ -8,6 +8,11 @@ import { ArrowLeft, Trophy, Flame, CalendarCheck, Activity as ActivityIcon, Load
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { useAthlete, useProfileSummary, useWorkouts, useMeasurements, useGallery, useAthleteWeekly, useAthleteStreaks } from "@/hooks/useElite";
 import { measurementDiffs, bestSet, highestDaily } from "@/lib/analytics";
+import { toast } from "sonner";
+import { useAthleteProgress, useXpHistory, useAdvancePhase } from "@/hooks/useXp";
+import { XpLevelCard } from "@/components/xp/XpLevelCard";
+import { PhaseProgressCard } from "@/components/xp/PhaseProgressCard";
+import { XpHistoryPanel } from "@/components/xp/XpHistoryPanel";
 import { initialsFor } from "@/lib/athlete-adapter";
 
 export const Route = createFileRoute("/admin/athletes/$slug")({
@@ -24,6 +29,9 @@ function AthleteProfileAdmin() {
   const { data: gallery = [] } = useGallery(athlete?.id);
   const { data: weekly = [] } = useAthleteWeekly(athlete?.id);
   const { data: streaks } = useAthleteStreaks(athlete?.id);
+  const { data: progress } = useAthleteProgress(athlete?.id);
+  const { data: xpHistory = [] } = useXpHistory(athlete?.id);
+  const advance = useAdvancePhase();
 
   if (isLoading) return <AdminShell title="Loading…"><div className="grid place-items-center py-16"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div></AdminShell>;
   if (!athlete) throw notFound();
@@ -72,7 +80,7 @@ function AthleteProfileAdmin() {
         <div>
           <Tabs defaultValue="overview">
             <TabsList className="glass border border-white/10 bg-transparent flex-wrap h-auto">
-              {["overview", "workouts", "measurements", "gallery", "analytics"].map((t) => (
+              {["overview", "workouts", "measurements", "gallery", "analytics", "progression"].map((t) => (
                 <TabsTrigger key={t} value={t} className="data-[state=active]:bg-primary data-[state=active]:text-white capitalize">{t}</TabsTrigger>
               ))}
             </TabsList>
@@ -175,7 +183,26 @@ function AthleteProfileAdmin() {
                 </div>
               </GlassCard>
             </TabsContent>
+            <TabsContent value="progression" className="mt-4">
+              <div className="grid md:grid-cols-2 gap-4">
+                <XpLevelCard progress={progress} />
+                <PhaseProgressCard
+                  progress={progress}
+                  athleteName={athlete.full_name}
+                  advancing={advance.isPending}
+                  onAdvance={async () => {
+                    try {
+                      const res = await advance.mutateAsync(athlete.id);
+                      if (res.advanced) toast.success(`Moved to Phase ${res.phase_number}`);
+                      else toast.error(res.reason ?? "Could not advance");
+                    } catch (e: any) { toast.error(e.message ?? "Could not advance"); }
+                  }}
+                />
+              </div>
+              <div className="mt-4"><XpHistoryPanel rows={xpHistory} /></div>
+            </TabsContent>
           </Tabs>
+
         </div>
       </div>
     </AdminShell>

@@ -20,6 +20,7 @@ import { Route as EliteSlugRouteImport } from './routes/elite.$slug'
 import { Route as AdminWorkoutsRouteImport } from './routes/admin.workouts'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminReportsRouteImport } from './routes/admin.reports'
+import { Route as AdminProgressionRouteImport } from './routes/admin.progression'
 import { Route as AdminMediaRouteImport } from './routes/admin.media'
 import { Route as AdminMeasurementsRouteImport } from './routes/admin.measurements'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
@@ -85,6 +86,11 @@ const AdminReportsRoute = AdminReportsRouteImport.update({
   path: '/reports',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminProgressionRoute = AdminProgressionRouteImport.update({
+  id: '/progression',
+  path: '/progression',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminMediaRoute = AdminMediaRouteImport.update({
   id: '/media',
   path: '/media',
@@ -145,6 +151,7 @@ export interface FileRoutesByFullPath {
   '/admin/login': typeof AdminLoginRoute
   '/admin/measurements': typeof AdminMeasurementsRoute
   '/admin/media': typeof AdminMediaRoute
+  '/admin/progression': typeof AdminProgressionRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/workouts': typeof AdminWorkoutsRoute
@@ -166,6 +173,7 @@ export interface FileRoutesByTo {
   '/admin/login': typeof AdminLoginRoute
   '/admin/measurements': typeof AdminMeasurementsRoute
   '/admin/media': typeof AdminMediaRoute
+  '/admin/progression': typeof AdminProgressionRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/workouts': typeof AdminWorkoutsRoute
@@ -189,6 +197,7 @@ export interface FileRoutesById {
   '/admin/login': typeof AdminLoginRoute
   '/admin/measurements': typeof AdminMeasurementsRoute
   '/admin/media': typeof AdminMediaRoute
+  '/admin/progression': typeof AdminProgressionRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/workouts': typeof AdminWorkoutsRoute
@@ -213,6 +222,7 @@ export interface FileRouteTypes {
     | '/admin/login'
     | '/admin/measurements'
     | '/admin/media'
+    | '/admin/progression'
     | '/admin/reports'
     | '/admin/settings'
     | '/admin/workouts'
@@ -234,6 +244,7 @@ export interface FileRouteTypes {
     | '/admin/login'
     | '/admin/measurements'
     | '/admin/media'
+    | '/admin/progression'
     | '/admin/reports'
     | '/admin/settings'
     | '/admin/workouts'
@@ -256,6 +267,7 @@ export interface FileRouteTypes {
     | '/admin/login'
     | '/admin/measurements'
     | '/admin/media'
+    | '/admin/progression'
     | '/admin/reports'
     | '/admin/settings'
     | '/admin/workouts'
@@ -354,6 +366,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminReportsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/progression': {
+      id: '/admin/progression'
+      path: '/progression'
+      fullPath: '/admin/progression'
+      preLoaderRoute: typeof AdminProgressionRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/media': {
       id: '/admin/media'
       path: '/media'
@@ -441,6 +460,7 @@ interface AdminRouteChildren {
   AdminLoginRoute: typeof AdminLoginRoute
   AdminMeasurementsRoute: typeof AdminMeasurementsRoute
   AdminMediaRoute: typeof AdminMediaRoute
+  AdminProgressionRoute: typeof AdminProgressionRoute
   AdminReportsRoute: typeof AdminReportsRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminWorkoutsRoute: typeof AdminWorkoutsRoute
@@ -456,6 +476,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminLoginRoute: AdminLoginRoute,
   AdminMeasurementsRoute: AdminMeasurementsRoute,
   AdminMediaRoute: AdminMediaRoute,
+  AdminProgressionRoute: AdminProgressionRoute,
   AdminReportsRoute: AdminReportsRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminWorkoutsRoute: AdminWorkoutsRoute,
