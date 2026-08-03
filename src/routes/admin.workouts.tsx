@@ -203,6 +203,8 @@ function WorkoutTrackerPage() {
             ))}
           </div>
         </GlassCard>
+        </div>
+
       </div>
     </AdminShell>
   );
