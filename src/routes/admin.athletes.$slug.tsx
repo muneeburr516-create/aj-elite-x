@@ -8,6 +8,11 @@ import { ArrowLeft, Trophy, Flame, CalendarCheck, Activity as ActivityIcon, Load
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { useAthlete, useProfileSummary, useWorkouts, useMeasurements, useGallery, useAthleteWeekly, useAthleteStreaks } from "@/hooks/useElite";
 import { measurementDiffs, bestSet, highestDaily } from "@/lib/analytics";
+import { toast } from "sonner";
+import { useAthleteProgress, useXpHistory, useAdvancePhase } from "@/hooks/useXp";
+import { XpLevelCard } from "@/components/xp/XpLevelCard";
+import { PhaseProgressCard } from "@/components/xp/PhaseProgressCard";
+import { XpHistoryPanel } from "@/components/xp/XpHistoryPanel";
 import { initialsFor } from "@/lib/athlete-adapter";
 
 export const Route = createFileRoute("/admin/athletes/$slug")({
