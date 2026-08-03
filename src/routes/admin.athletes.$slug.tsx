@@ -29,6 +29,9 @@ function AthleteProfileAdmin() {
   const { data: gallery = [] } = useGallery(athlete?.id);
   const { data: weekly = [] } = useAthleteWeekly(athlete?.id);
   const { data: streaks } = useAthleteStreaks(athlete?.id);
+  const { data: progress } = useAthleteProgress(athlete?.id);
+  const { data: xpHistory = [] } = useXpHistory(athlete?.id);
+  const advance = useAdvancePhase();
 
   if (isLoading) return <AdminShell title="Loading…"><div className="grid place-items-center py-16"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div></AdminShell>;
   if (!athlete) throw notFound();
