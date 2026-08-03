@@ -175,7 +175,26 @@ function AthleteProfileAdmin() {
                 </div>
               </GlassCard>
             </TabsContent>
+            <TabsContent value="progression" className="mt-4">
+              <div className="grid md:grid-cols-2 gap-4">
+                <XpLevelCard progress={progress} />
+                <PhaseProgressCard
+                  progress={progress}
+                  athleteName={athlete.full_name}
+                  advancing={advance.isPending}
+                  onAdvance={async () => {
+                    try {
+                      const res = await advance.mutateAsync(athlete.id);
+                      if (res.advanced) toast.success(`Moved to Phase ${res.phase_number}`);
+                      else toast.error(res.reason ?? "Could not advance");
+                    } catch (e: any) { toast.error(e.message ?? "Could not advance"); }
+                  }}
+                />
+              </div>
+              <div className="mt-4"><XpHistoryPanel rows={xpHistory} /></div>
+            </TabsContent>
           </Tabs>
+
         </div>
       </div>
     </AdminShell>
