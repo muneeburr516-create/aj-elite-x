@@ -167,7 +167,23 @@ function WorkoutTrackerPage() {
           </div>
         </GlassCard>
 
+        <div className="space-y-4">
+        <XpLevelCard progress={progress} />
+        <PhaseProgressCard
+          progress={progress}
+          athleteName={athlete?.full_name}
+          advancing={advance.isPending}
+          onAdvance={async () => {
+            if (!athleteId) return;
+            try {
+              const res = await advance.mutateAsync(athleteId);
+              if (res.advanced) toast.success(`Moved to Phase ${res.phase_number}`);
+              else toast.error(res.reason ?? "Could not advance");
+            } catch (e: any) { toast.error(e.message ?? "Could not advance"); }
+          }}
+        />
         <GlassCard>
+
           <h3 className="font-display text-lg mb-3">{athlete?.full_name ?? "—"} — Last 10</h3>
           <div className="space-y-2 max-h-[560px] overflow-y-auto pr-1">
             {last10.length === 0 && <div className="text-xs text-white/40 py-6 text-center">No sessions logged yet.</div>}
