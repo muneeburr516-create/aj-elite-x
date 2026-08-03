@@ -18,6 +18,7 @@ const items = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/admin/athletes", label: "Athletes", icon: Users },
   { to: "/admin/workouts", label: "Workout Tracker", icon: Dumbbell },
+  { to: "/admin/progression", label: "XP & Progression", icon: Zap },
   { to: "/admin/measurements", label: "Measurements", icon: Ruler },
   { to: "/admin/gallery", label: "Transformation Gallery", icon: Images },
   { to: "/admin/leaderboards", label: "Leaderboards", icon: Trophy },
