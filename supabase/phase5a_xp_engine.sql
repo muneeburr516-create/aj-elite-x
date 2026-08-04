@@ -1,48 +1,65 @@
--- ============================================================
--- ELITE X — PHASE 5A : XP ENGINE / LEVEL SYSTEM / WORKOUT PHASES
--- 100% ADDITIVE. Safe to run on the live database.
--- Nothing is dropped, reset or overwritten except objects created
--- by this very file (idempotent re-run friendly).
--- Run ONCE in the Supabase SQL Editor.
--- ============================================================
+-- ================================================================
+-- ELITE X — PHASE 5A : XP ENGINE · LEVELS · SEASONS · WORKOUT PHASES
+-- ================================================================
+-- SINGLE SOURCE OF TRUTH for XP, Levels, Seasons and Workout Phases.
+-- Reserved extension points for future Achievements / Titles / Badges.
+--
+-- PREREQUISITE: run supabase/phase5_00_cleanup.sql first (once).
+--
+-- 100% IDEMPOTENT & SELF-HEALING:
+--   * safe on a fresh database
+--   * safe on a partially migrated database
+--   * safe to run any number of times
+--   * never drops or rewrites athletes, workouts, measurements,
+--     gallery, settings, admins, logs or existing seasons/progress data
+-- ================================================================
 
 create extension if not exists "pgcrypto";
 
 -- ------------------------------------------------------------
--- ENUMS
+-- ENUMS (create-if-missing, then top up missing values)
 -- ------------------------------------------------------------
-do $$ begin
-  create type public.season_status as enum ('upcoming','active','completed','archived');
+do $$ begin create type public.season_status  as enum ('upcoming','active','completed','archived');
+exception when duplicate_object then null; end $$;
+do $$ begin create type public.phase_status   as enum ('active','inactive','archived');
+exception when duplicate_object then null; end $$;
+do $$ begin create type public.exercise_slot  as enum ('pushup','pullup','chinup');
+exception when duplicate_object then null; end $$;
+do $$ begin create type public.xp_source      as enum ('workout','manual','bonus','adjustment');
 exception when duplicate_object then null; end $$;
 
-do $$ begin
-  create type public.phase_status as enum ('active','inactive','archived');
-exception when duplicate_object then null; end $$;
-
-do $$ begin
-  -- which set-group of daily_workouts an exercise maps to
-  create type public.exercise_slot as enum ('pushup','pullup','chinup');
-exception when duplicate_object then null; end $$;
-
-do $$ begin
-  create type public.xp_source as enum ('workout','manual','bonus','adjustment');
-exception when duplicate_object then null; end $$;
+-- future-proofing: achievement/title/badge XP sources reserved now
+do $$
+declare v text;
+begin
+  foreach v in array array['workout','manual','bonus','adjustment','achievement','title','badge','streak'] loop
+    begin execute format('alter type public.xp_source add value if not exists %L', v);
+    exception when others then null; end;
+  end loop;
+end $$;
 
 -- ------------------------------------------------------------
--- SEASONS (multi-season ready foundation)
+-- SEASONS
 -- ------------------------------------------------------------
 create table if not exists public.seasons (
-  id uuid primary key default gen_random_uuid(),
-  slug text unique not null,
-  name text not null,
-  season_number int not null default 1,
-  duration_days int not null default 90,
-  start_date date,
-  status public.season_status not null default 'active',
-  is_current boolean not null default false,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  id uuid primary key default gen_random_uuid()
 );
+alter table public.seasons add column if not exists slug          text;
+alter table public.seasons add column if not exists name          text;
+alter table public.seasons add column if not exists season_number int  not null default 1;
+alter table public.seasons add column if not exists duration_days int  not null default 90;
+alter table public.seasons add column if not exists start_date    date;
+alter table public.seasons add column if not exists status        public.season_status not null default 'active';
+alter table public.seasons add column if not exists is_current    boolean not null default false;
+alter table public.seasons add column if not exists created_at    timestamptz not null default now();
+alter table public.seasons add column if not exists updated_at    timestamptz not null default now();
+
+update public.seasons set slug = coalesce(slug, 'season-'||season_number),
+                          name = coalesce(name, 'Elite X Season '||season_number);
+alter table public.seasons alter column slug set not null;
+alter table public.seasons alter column name set not null;
+
+create unique index if not exists uniq_seasons_slug    on public.seasons(slug);
 create unique index if not exists uniq_seasons_current on public.seasons(is_current) where is_current;
 
 insert into public.seasons (slug, name, season_number, duration_days, status, is_current, start_date)
@@ -58,21 +75,25 @@ returns uuid language sql stable security definer set search_path = public as $$
 $$;
 
 -- ------------------------------------------------------------
--- LEVEL CONFIGURATION (editable by admin — never hardcoded)
+-- LEVEL CONFIGURATION (admin-editable, never hardcoded)
 -- ------------------------------------------------------------
 create table if not exists public.level_config (
-  id uuid primary key default gen_random_uuid(),
-  season_id uuid references public.seasons(id) on delete cascade,
-  level int not null,
-  xp_required bigint not null,
-  label text,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  unique (season_id, level)
+  id uuid primary key default gen_random_uuid()
 );
-create index if not exists idx_level_config_xp on public.level_config(season_id, xp_required);
+alter table public.level_config add column if not exists season_id   uuid references public.seasons(id) on delete cascade;
+alter table public.level_config add column if not exists level       int;
+alter table public.level_config add column if not exists xp_required bigint;
+alter table public.level_config add column if not exists label       text;
+alter table public.level_config add column if not exists created_at  timestamptz not null default now();
+alter table public.level_config add column if not exists updated_at  timestamptz not null default now();
 
--- Seed a progressive curve: 0, 500, 1200, 2200, then growing deltas.
+delete from public.level_config where level is null or xp_required is null;
+alter table public.level_config alter column level       set not null;
+alter table public.level_config alter column xp_required set not null;
+
+create unique index if not exists uniq_level_config_season_level on public.level_config(season_id, level);
+create index        if not exists idx_level_config_xp            on public.level_config(season_id, xp_required);
+
 do $$
 declare _season uuid; _lvl int; _xp bigint; _delta bigint;
 begin
@@ -81,7 +102,9 @@ begin
   if exists (select 1 from public.level_config where season_id = _season) then return; end if;
 
   insert into public.level_config(season_id, level, xp_required, label) values
-    (_season,1,0,'Initiate'),(_season,2,500,'Rookie'),(_season,3,1200,'Contender'),(_season,4,2200,'Challenger');
+    (_season,1,0,'Initiate'),(_season,2,500,'Rookie'),
+    (_season,3,1200,'Contender'),(_season,4,2200,'Challenger')
+  on conflict (season_id, level) do nothing;
 
   _xp := 2200; _delta := 1000;
   for _lvl in 5..60 loop
@@ -93,7 +116,6 @@ begin
   end loop;
 end $$;
 
--- Level lookup driven entirely by level_config
 create or replace function public.xp_level(_xp bigint, _season uuid default null)
 returns int language sql stable security definer set search_path = public as $$
   select coalesce(max(level),1)
@@ -103,34 +125,47 @@ returns int language sql stable security definer set search_path = public as $$
 $$;
 
 -- ------------------------------------------------------------
--- WORKOUT PHASES + EXERCISES (templates, admin-manageable later)
+-- WORKOUT PHASES + EXERCISE TEMPLATES
 -- ------------------------------------------------------------
 create table if not exists public.workout_phases (
-  id uuid primary key default gen_random_uuid(),
-  season_id uuid not null references public.seasons(id) on delete cascade,
-  phase_number int not null,
-  name text not null,
-  start_day int not null,
-  end_day int not null,
-  duration_days int generated always as (end_day - start_day + 1) stored,
-  status public.phase_status not null default 'active',
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  unique (season_id, phase_number)
+  id uuid primary key default gen_random_uuid()
 );
-create index if not exists idx_phases_season on public.workout_phases(season_id, phase_number);
+alter table public.workout_phases add column if not exists season_id    uuid references public.seasons(id) on delete cascade;
+alter table public.workout_phases add column if not exists phase_number int;
+alter table public.workout_phases add column if not exists name         text;
+alter table public.workout_phases add column if not exists start_day    int;
+alter table public.workout_phases add column if not exists end_day      int;
+alter table public.workout_phases add column if not exists status       public.phase_status not null default 'active';
+alter table public.workout_phases add column if not exists created_at   timestamptz not null default now();
+alter table public.workout_phases add column if not exists updated_at   timestamptz not null default now();
+alter table public.workout_phases add column if not exists duration_days int
+  generated always as (end_day - start_day + 1) stored;
+
+delete from public.workout_phases where phase_number is null or start_day is null or end_day is null;
+alter table public.workout_phases alter column phase_number set not null;
+alter table public.workout_phases alter column start_day    set not null;
+alter table public.workout_phases alter column end_day      set not null;
+
+create unique index if not exists uniq_phases_season_number on public.workout_phases(season_id, phase_number);
+create index        if not exists idx_phases_season         on public.workout_phases(season_id, phase_number);
 
 create table if not exists public.workout_exercises (
-  id uuid primary key default gen_random_uuid(),
-  phase_id uuid not null references public.workout_phases(id) on delete cascade,
-  slot public.exercise_slot not null,
-  display_name text not null,
-  exercise_order int not null default 1,
-  xp_per_rep int not null default 1,
-  created_at timestamptz not null default now(),
-  unique (phase_id, slot)
+  id uuid primary key default gen_random_uuid()
 );
-create index if not exists idx_exercises_phase on public.workout_exercises(phase_id, exercise_order);
+alter table public.workout_exercises add column if not exists phase_id       uuid references public.workout_phases(id) on delete cascade;
+alter table public.workout_exercises add column if not exists slot           public.exercise_slot;
+alter table public.workout_exercises add column if not exists display_name   text;
+alter table public.workout_exercises add column if not exists exercise_order int not null default 1;
+alter table public.workout_exercises add column if not exists xp_per_rep     int not null default 1;
+alter table public.workout_exercises add column if not exists created_at     timestamptz not null default now();
+
+delete from public.workout_exercises where phase_id is null or slot is null;
+alter table public.workout_exercises alter column slot set not null;
+update public.workout_exercises set display_name = coalesce(display_name, initcap(slot::text)||'s');
+alter table public.workout_exercises alter column display_name set not null;
+
+create unique index if not exists uniq_exercises_phase_slot on public.workout_exercises(phase_id, slot);
+create index        if not exists idx_exercises_phase       on public.workout_exercises(phase_id, exercise_order);
 
 do $$
 declare _season uuid; _p1 uuid; _p2 uuid; _p3 uuid;
@@ -138,14 +173,10 @@ begin
   select public.current_season_id() into _season;
   if _season is null then return; end if;
 
-  insert into public.workout_phases(season_id, phase_number, name, start_day, end_day)
-  values (_season,1,'Phase 1 — Foundation',1,30)
-  on conflict (season_id, phase_number) do nothing;
-  insert into public.workout_phases(season_id, phase_number, name, start_day, end_day)
-  values (_season,2,'Phase 2 — Intensity',31,60)
-  on conflict (season_id, phase_number) do nothing;
-  insert into public.workout_phases(season_id, phase_number, name, start_day, end_day)
-  values (_season,3,'Phase 3 — Final Forge',61,90)
+  insert into public.workout_phases(season_id, phase_number, name, start_day, end_day) values
+    (_season,1,'Phase 1 — Foundation',1,30),
+    (_season,2,'Phase 2 — Intensity',31,60),
+    (_season,3,'Phase 3 — Final Forge',61,90)
   on conflict (season_id, phase_number) do nothing;
 
   select id into _p1 from public.workout_phases where season_id=_season and phase_number=1;
@@ -162,56 +193,65 @@ begin
     (_p3,'pullup','Pull-ups',1,6),
     (_p3,'pushup','Push-ups',2,6)
   on conflict (phase_id, slot) do update
-    set display_name = excluded.display_name,
+    set display_name   = excluded.display_name,
         exercise_order = excluded.exercise_order,
-        xp_per_rep = excluded.xp_per_rep;
+        xp_per_rep     = excluded.xp_per_rep;
 end $$;
 
--- Track which phase a workout was logged under (additive column)
-alter table public.daily_workouts add column if not exists phase_id uuid references public.workout_phases(id);
+-- phase/season context on each workout row (additive)
+alter table public.daily_workouts add column if not exists phase_id  uuid references public.workout_phases(id);
 alter table public.daily_workouts add column if not exists season_id uuid references public.seasons(id);
-create index if not exists idx_workouts_phase on public.daily_workouts(phase_id);
+create index if not exists idx_workouts_phase  on public.daily_workouts(phase_id);
+create index if not exists idx_workouts_season on public.daily_workouts(season_id);
 
 -- ------------------------------------------------------------
--- ATHLETE PROGRESS (per athlete PER SEASON)
+-- ATHLETE PROGRESS (per athlete, per season)
 -- ------------------------------------------------------------
 create table if not exists public.athlete_progress (
-  id uuid primary key default gen_random_uuid(),
-  athlete_id uuid not null references public.athletes(id) on delete cascade,
-  season_id uuid not null references public.seasons(id) on delete cascade,
-  total_xp bigint not null default 0,
-  workout_xp bigint not null default 0,
-  bonus_xp bigint not null default 0,
-  current_level int not null default 1,
-  workout_days_completed int not null default 0,
-  current_phase_id uuid references public.workout_phases(id),
-  phase_started_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  unique (athlete_id, season_id)
+  id uuid primary key default gen_random_uuid()
 );
-create index if not exists idx_progress_season_xp on public.athlete_progress(season_id, total_xp desc);
+alter table public.athlete_progress add column if not exists athlete_id             uuid references public.athletes(id) on delete cascade;
+alter table public.athlete_progress add column if not exists season_id              uuid references public.seasons(id) on delete cascade;
+alter table public.athlete_progress add column if not exists total_xp               bigint not null default 0;
+alter table public.athlete_progress add column if not exists workout_xp             bigint not null default 0;
+alter table public.athlete_progress add column if not exists bonus_xp               bigint not null default 0;
+alter table public.athlete_progress add column if not exists current_level          int not null default 1;
+alter table public.athlete_progress add column if not exists workout_days_completed int not null default 0;
+alter table public.athlete_progress add column if not exists current_phase_id       uuid references public.workout_phases(id);
+alter table public.athlete_progress add column if not exists phase_started_at       timestamptz not null default now();
+alter table public.athlete_progress add column if not exists updated_at             timestamptz not null default now();
 
+delete from public.athlete_progress where athlete_id is null or season_id is null;
+create unique index if not exists uniq_progress_athlete_season on public.athlete_progress(athlete_id, season_id);
+create index        if not exists idx_progress_season_xp       on public.athlete_progress(season_id, total_xp desc);
+
+-- ------------------------------------------------------------
+-- XP HISTORY (immutable ledger — the only XP audit trail)
+-- ------------------------------------------------------------
 create table if not exists public.xp_history (
-  id uuid primary key default gen_random_uuid(),
-  athlete_id uuid not null references public.athletes(id) on delete cascade,
-  season_id uuid not null references public.seasons(id) on delete cascade,
-  workout_id uuid references public.daily_workouts(id) on delete cascade,
-  phase_id uuid references public.workout_phases(id),
-  challenge_day int,
-  source public.xp_source not null default 'workout',
-  xp_amount bigint not null default 0,
-  breakdown jsonb,
-  created_at timestamptz not null default now()
+  id uuid primary key default gen_random_uuid()
 );
-create unique index if not exists uniq_xp_history_workout on public.xp_history(workout_id) where workout_id is not null;
-create index if not exists idx_xp_history_athlete on public.xp_history(athlete_id, created_at desc);
+alter table public.xp_history add column if not exists athlete_id    uuid references public.athletes(id) on delete cascade;
+alter table public.xp_history add column if not exists season_id     uuid references public.seasons(id) on delete cascade;
+alter table public.xp_history add column if not exists workout_id    uuid references public.daily_workouts(id) on delete cascade;
+alter table public.xp_history add column if not exists phase_id      uuid references public.workout_phases(id);
+alter table public.xp_history add column if not exists challenge_day int;
+alter table public.xp_history add column if not exists source        public.xp_source not null default 'workout';
+alter table public.xp_history add column if not exists xp_amount     bigint not null default 0;
+alter table public.xp_history add column if not exists breakdown     jsonb;
+alter table public.xp_history add column if not exists created_at    timestamptz not null default now();
+-- reserved for future achievement/title/badge awards
+alter table public.xp_history add column if not exists reference_id  uuid;
+alter table public.xp_history add column if not exists note          text;
+
+delete from public.xp_history where athlete_id is null or season_id is null;
+create unique index if not exists uniq_xp_history_workout   on public.xp_history(workout_id) where workout_id is not null;
+create index        if not exists idx_xp_history_athlete    on public.xp_history(athlete_id, created_at desc);
+create index        if not exists idx_xp_history_season_src on public.xp_history(season_id, source);
 
 -- ------------------------------------------------------------
 -- XP ENGINE
 -- ------------------------------------------------------------
-
--- Resolve the phase a workout belongs to: explicit phase → athlete's current
--- phase → phase whose day-range contains the challenge day → phase 1.
 create or replace function public.resolve_workout_phase(_athlete uuid, _day int, _explicit uuid default null)
 returns uuid language sql stable security definer set search_path = public as $$
   select coalesce(
@@ -228,7 +268,6 @@ returns uuid language sql stable security definer set search_path = public as $$
   );
 $$;
 
--- XP for a single workout row under a given phase template
 create or replace function public.workout_xp(_phase uuid, _pushups int, _pullups int, _chinups int, _att public.attendance_status)
 returns bigint language sql stable security definer set search_path = public as $$
   select case when _att <> 'PRESENT' then 0 else coalesce((
@@ -243,7 +282,6 @@ returns bigint language sql stable security definer set search_path = public as 
   ),0) end;
 $$;
 
--- Recalculate one athlete completely (XP history + totals + level + days)
 create or replace function public.recalculate_athlete_xp(_athlete uuid)
 returns void language plpgsql security definer set search_path = public as $$
 declare
@@ -263,7 +301,7 @@ begin
   values (_athlete, _season, _default_phase)
   on conflict (athlete_id, season_id) do nothing;
 
-  -- rebuild workout-sourced xp history for this athlete
+  -- rebuild ONLY workout-sourced XP; bonus/manual/achievement rows are preserved
   delete from public.xp_history
    where athlete_id = _athlete and season_id = _season and source = 'workout';
 
@@ -283,7 +321,8 @@ begin
            'chinups', w.chinup_set_1 + w.chinup_set_2 + w.chinup_set_3,
            'attendance', w.attendance)
   from public.daily_workouts w
-  where w.athlete_id = _athlete;
+  where w.athlete_id = _athlete
+  on conflict do nothing;
 
   select coalesce(sum(xp_amount),0) into _workout_xp
     from public.xp_history where athlete_id=_athlete and season_id=_season and source='workout';
@@ -306,7 +345,6 @@ begin
   where athlete_id=_athlete and season_id=_season;
 end $$;
 
--- Trigger: every workout save/delete recalculates XP immediately
 create or replace function public.trg_workout_xp_sync()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
@@ -322,7 +360,6 @@ drop trigger if exists trg_workouts_xp on public.daily_workouts;
 create trigger trg_workouts_xp after insert or update or delete on public.daily_workouts
 for each row execute function public.trg_workout_xp_sync();
 
--- Stamp season/phase on new workout rows
 create or replace function public.trg_workout_stamp_phase()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
@@ -436,8 +473,9 @@ select jsonb_build_object(
 );
 $$;
 
--- XP leaderboard (additive — existing power leaderboards untouched)
-create or replace view public.xp_leaderboard as
+-- XP leaderboard (additive — power leaderboards untouched)
+drop view if exists public.xp_leaderboard cascade;
+create view public.xp_leaderboard as
 select
   row_number() over (order by ap.total_xp desc, ap.current_level desc, a.full_name asc)::int as rank,
   a.id as athlete_id, a.slug, a.full_name, a.photo_url,
@@ -449,7 +487,7 @@ left join public.workout_phases wp on wp.id = ap.current_phase_id
 where ap.season_id = public.current_season_id();
 
 -- ------------------------------------------------------------
--- BACKFILL — every existing athlete keeps full progress
+-- BACKFILL — no existing progress is lost
 -- ------------------------------------------------------------
 do $$
 declare _a uuid;
@@ -488,23 +526,18 @@ for each row execute function public.touch_updated_at();
 -- ------------------------------------------------------------
 -- RLS — public read, admin write
 -- ------------------------------------------------------------
-alter table public.seasons            enable row level security;
-alter table public.level_config       enable row level security;
-alter table public.workout_phases     enable row level security;
-alter table public.workout_exercises  enable row level security;
-alter table public.athlete_progress   enable row level security;
-alter table public.xp_history         enable row level security;
-
 do $$
 declare t text;
 begin
   foreach t in array array['seasons','level_config','workout_phases','workout_exercises','athlete_progress','xp_history']
   loop
-    execute format('drop policy if exists %I_read on public.%I', t, t);
-    execute format('create policy %I_read on public.%I for select to anon, authenticated using (true)', t, t);
+    execute format('alter table public.%I enable row level security', t);
 
-    execute format('drop policy if exists %I_admin_write on public.%I', t, t);
-    execute format('create policy %I_admin_write on public.%I for all to authenticated using (public.is_admin(auth.uid())) with check (public.is_admin(auth.uid()))', t, t);
+    execute format('drop policy if exists %I on public.%I', t||'_read', t);
+    execute format('create policy %I on public.%I for select to anon, authenticated using (true)', t||'_read', t);
+
+    execute format('drop policy if exists %I on public.%I', t||'_admin_write', t);
+    execute format('create policy %I on public.%I for all to authenticated using (public.is_admin(auth.uid())) with check (public.is_admin(auth.uid()))', t||'_admin_write', t);
   end loop;
 end $$;
 
@@ -516,6 +549,8 @@ grant select on public.seasons, public.level_config, public.workout_phases,
                 public.xp_history, public.xp_leaderboard to anon, authenticated;
 grant insert, update, delete on public.seasons, public.level_config, public.workout_phases,
                 public.workout_exercises, public.athlete_progress, public.xp_history to authenticated;
+grant all on public.seasons, public.level_config, public.workout_phases,
+             public.workout_exercises, public.athlete_progress, public.xp_history to service_role;
 
 grant execute on function public.xp_level(bigint, uuid) to anon, authenticated;
 grant execute on function public.get_athlete_progress(uuid) to anon, authenticated;
@@ -529,13 +564,22 @@ grant execute on function public.current_season_id() to anon, authenticated;
 -- REALTIME
 -- ------------------------------------------------------------
 do $$
+declare t text;
 begin
-  begin alter publication supabase_realtime add table public.athlete_progress; exception when others then null; end;
-  begin alter publication supabase_realtime add table public.xp_history; exception when others then null; end;
-  begin alter publication supabase_realtime add table public.workout_phases; exception when others then null; end;
-  begin alter publication supabase_realtime add table public.workout_exercises; exception when others then null; end;
-  begin alter publication supabase_realtime add table public.level_config; exception when others then null; end;
-  begin alter publication supabase_realtime add table public.seasons; exception when others then null; end;
+  foreach t in array array['athlete_progress','xp_history','workout_phases','workout_exercises','level_config','seasons']
+  loop
+    begin execute format('alter publication supabase_realtime add table public.%I', t);
+    exception when others then null; end;
+  end loop;
 end $$;
 
--- Done. Existing tables, data, views, RPCs and features untouched.
+-- ------------------------------------------------------------
+-- VERIFICATION
+-- ------------------------------------------------------------
+select 'seasons' o, count(*) from public.seasons
+union all select 'level_config', count(*) from public.level_config
+union all select 'workout_phases', count(*) from public.workout_phases
+union all select 'workout_exercises', count(*) from public.workout_exercises
+union all select 'athlete_progress', count(*) from public.athlete_progress
+union all select 'xp_history', count(*) from public.xp_history
+union all select 'xp_leaderboard', count(*) from public.xp_leaderboard;
